@@ -1,5 +1,6 @@
 package org.igye.jfxutils
 
+import javafx.event.{EventHandler, EventType, Event}
 import javafx.geometry.Insets
 import javafx.scene.layout._
 import javafx.scene.paint.Color
@@ -27,5 +28,16 @@ object JfxUtils {
 
     def createBackground(fillColor: Color) = {
         new Background(new BackgroundFill(fillColor, CornerRadii.EMPTY, new Insets(0)))
+    }
+
+    def eventHandler[T <: Event](eventType: EventType[T])(hnd: T => Unit) = {
+        EventHandlerInfo(
+            eventType,
+            new EventHandler[T] {
+                override def handle(event: T): Unit = {
+                    hnd(event)
+                }
+            }
+        )
     }
 }
