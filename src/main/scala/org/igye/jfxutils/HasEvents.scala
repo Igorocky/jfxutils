@@ -22,4 +22,23 @@ class HasEvents(node: Node) {
         eventHandlerInfos.foreach(info => node.addEventHandler(info.eventType, info.handler))
         this
     }
+
+    def flt[T <: Event](eventType: EventType[T])(hnd: T => Unit): HasEvents = {
+        node.addEventFilter(eventType, new EventHandler[T] {
+            override def handle(event: T): Unit = {
+                hnd(event)
+            }
+        })
+        this
+    }
+
+    def flt[T <: Event](eventHandlerInfo: EventHandlerInfo[T]): HasEvents = {
+        node.addEventHandler(eventHandlerInfo.eventType, eventHandlerInfo.handler)
+        this
+    }
+
+    def flt[T <: Event](eventHandlerInfos: EventHandlerInfo[T] *): HasEvents = {
+        eventHandlerInfos.foreach(info => node.addEventHandler(info.eventType, info.handler))
+        this
+    }
 }

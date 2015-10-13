@@ -2,9 +2,13 @@ package org.igye.jfxutils
 
 import javafx.event.{EventHandler, EventType, Event}
 import javafx.geometry.Insets
+import javafx.scene.Node
+import javafx.scene.input.KeyEvent
 import javafx.scene.layout._
 import javafx.scene.paint.Color
 import javafx.scene.shape.{StrokeLineCap, StrokeLineJoin, StrokeType}
+
+import org.igye.jfxutils.action.{Action, ShortcutActionTrigger}
 
 object JfxUtils {
     def createBorder(color: Color) = {
@@ -39,5 +43,17 @@ object JfxUtils {
                 }
             }
         )
+    }
+
+    def bindShortcutActionTrigger(node: Node, actionsList: List[Action]): Unit = {
+        val shortcutActionTrigger = new ShortcutActionTrigger(actionsList)
+        node.flt(KeyEvent.ANY){e =>
+            if (shortcutActionTrigger.hasActionMatchingEvent(e)) {
+                if (e.getEventType == KeyEvent.KEY_PRESSED) {
+                    shortcutActionTrigger.triggerAction(e)
+                }
+                e.consume()
+            }
+        }
     }
 }
