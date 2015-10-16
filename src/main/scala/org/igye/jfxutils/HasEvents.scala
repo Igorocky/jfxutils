@@ -18,6 +18,11 @@ class HasEvents(node: Node) {
         this
     }
 
+    def remHnd[T <: Event](eventHandlerInfo: EventHandlerInfo[T]): HasEvents = {
+        node.removeEventHandler(eventHandlerInfo.eventType, eventHandlerInfo.handler)
+        this
+    }
+
     def hnd[T <: Event](eventHandlerInfos: EventHandlerInfo[T] *): HasEvents = {
         eventHandlerInfos.foreach(info => node.addEventHandler(info.eventType, info.handler))
         this
@@ -34,6 +39,11 @@ class HasEvents(node: Node) {
 
     def flt[T <: Event](eventHandlerInfo: EventHandlerInfo[T]): HasEvents = {
         node.addEventHandler(eventHandlerInfo.eventType, eventHandlerInfo.handler)
+        this
+    }
+
+    def remFlt[T <: Event](eventHandlerInfo: EventHandlerInfo[T]): HasEvents = {
+        node.removeEventFilter(eventHandlerInfo.eventType, eventHandlerInfo.handler)
         this
     }
 

@@ -71,7 +71,7 @@ object Action {
             private val initialButtonOnActionEventHandler = button.getOnAction
 
             override def shortcutSet(newShortcut: Shortcut): Unit = {
-                button.setText(initialButtonText + s" [${newShortcut.toString}]")
+                button.setText(initialButtonText + s" (${newShortcut.toString})")
             }
 
             override def shortcutRemoved(): Unit = {
