@@ -66,14 +66,12 @@ object JfxUtils {
         if (tab.getTabPane() != null) {
             tab.getTabPane().flt(hnd)
         }
-        tab.tabPaneProperty().addListener(new ChangeListener[TabPane] {
-            override def changed(observable: ObservableValue[_ <: TabPane], oldValue: TabPane, newValue: TabPane): Unit = {
-                if (oldValue != null) {
-                    oldValue.remFlt(hnd)
-                }
-                if (newValue != null) {
-                    newValue.flt(hnd)
-                }
+        tab.tabPaneProperty().addListener(CngListener[TabPane]{v =>
+            if (v.oldValue != null) {
+                v.oldValue.remFlt(hnd)
+            }
+            if (v.newValue != null) {
+                v.newValue.flt(hnd)
             }
         })
     }

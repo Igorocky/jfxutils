@@ -2,13 +2,21 @@ package org.igye.jfxutils.action
 
 import javafx.scene.input.{KeyCode, KeyEvent}
 
-import org.igye.jfxutils.action.Shortcut.keyMatchers
-
-case class Shortcut(keys: List[KeyCode]) {
+case class Shortcut(keys: KeyCode*) {
     def matches(keyEvent: KeyEvent): Boolean = {
-        keys.nonEmpty && keys.forall(keyCode =>
-            if (keyMatchers.contains(keyCode)) keyMatchers(keyCode)(keyEvent) else keyCode == keyEvent.getCode
-        )
+        if (keys.contains(KeyCode.CONTROL) && !keyEvent.isControlDown ||
+            !keys.contains(KeyCode.CONTROL) && keyEvent.isControlDown ||
+            keys.contains(KeyCode.ALT) && !keyEvent.isAltDown ||
+            !keys.contains(KeyCode.ALT) && keyEvent.isAltDown ||
+            keys.contains(KeyCode.SHIFT) && !keyEvent.isShiftDown ||
+            !keys.contains(KeyCode.SHIFT) && keyEvent.isShiftDown
+        ) {
+            false
+        } else {
+            keys.nonEmpty &&
+                keys.filter(keyCode => keyCode != KeyCode.CONTROL && keyCode != KeyCode.ALT && keyCode != KeyCode.SHIFT)
+                    .forall(_ == keyEvent.getCode)
+        }
     }
 
     override def toString: String = {
@@ -19,12 +27,4 @@ case class Shortcut(keys: List[KeyCode]) {
             case other@_ => other
         }).mkString("+")
     }
-}
-
-object Shortcut {
-    private val keyMatchers = Map[KeyCode, KeyEvent => Boolean](
-        KeyCode.CONTROL -> (e => e.isControlDown)
-        ,KeyCode.ALT -> (e => e.isAltDown)
-        ,KeyCode.SHIFT -> (e => e.isShiftDown)
-    )
 }
