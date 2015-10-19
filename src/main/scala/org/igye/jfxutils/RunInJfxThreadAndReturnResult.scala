@@ -1,6 +1,6 @@
 package org.igye.jfxutils
 
-import org.slf4j.Logger
+import org.apache.logging.log4j.Logger
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

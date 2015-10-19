@@ -2,7 +2,7 @@ package org.igye.jfxutils
 
 import javafx.application.Platform
 
-import org.slf4j.Logger
+import org.apache.logging.log4j.Logger
 
 import scala.concurrent.{Future, Promise}
 
