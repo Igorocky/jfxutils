@@ -2,13 +2,10 @@ package org.igye.jfxutils.properties
 
 import javafx.beans.property.SimpleIntegerProperty
 
-import org.apache.logging.log4j.{LogManager, Logger}
-import org.igye.jfxutils.{WritableObservableValueToBidirectionalBindingTarget, WritableValueToBindingTarget}
+import org.igye.jfxutils.propertyToBindingOperators
 import org.junit.{Assert, Test}
 
 class BindingOperatorsTest {
-    implicit val log: Logger = LogManager.getLogger()
-
     @Test
     def testUnidirectionalBinding(): Unit = {
         val target = new SimpleIntegerProperty(0)
