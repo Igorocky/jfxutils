@@ -3,7 +3,7 @@ package org.igye.jfxutils.properties
 import javafx.beans.property.Property
 import javafx.beans.value.ObservableValue
 
-class BindingOperators[T](property: Property[T]) {
+class PropertyBindingOperators[T](property: Property[T]) {
     def <== (observableValue: ObservableValue[T]): Unit = {
         property.bind(observableValue)
     }

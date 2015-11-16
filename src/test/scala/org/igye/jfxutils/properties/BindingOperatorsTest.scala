@@ -1,8 +1,10 @@
 package org.igye.jfxutils.properties
 
+import java.util
 import javafx.beans.property.SimpleIntegerProperty
+import javafx.collections.FXCollections
 
-import org.igye.jfxutils.propertyToBindingOperators
+import org.igye.jfxutils.{listToListBindingOperators, propertyToBindingOperators}
 import org.junit.{Assert, Test}
 
 class BindingOperatorsTest {
@@ -38,5 +40,32 @@ class BindingOperatorsTest {
         left.setValue(3)
         Assert.assertEquals(3, right.get())
         Assert.assertEquals(3, left.get())
+    }
+
+    @Test
+    def testListBinding(): Unit = {
+        val source = FXCollections.observableArrayList[Int]()
+        val target = new util.ArrayList[String]()
+        val mapper = (i: Int) => i.toString + "_"
+
+        target <== (source, mapper)
+
+        Assert.assertEquals(0, source.size())
+        Assert.assertEquals(0, target.size())
+
+        source.add(1)
+        Assert.assertEquals(1, source.size())
+        Assert.assertEquals(1, target.size())
+        Assert.assertEquals("1_", target.get(0))
+        Assert.assertEquals(1, source.get(0))
+
+        source.addAll(2,3)
+        source.remove(0)
+        Assert.assertEquals(2, source.size())
+        Assert.assertEquals(2, target.size())
+        Assert.assertEquals("2_", target.get(0))
+        Assert.assertEquals(2, source.get(0))
+        Assert.assertEquals("3_", target.get(1))
+        Assert.assertEquals(3, source.get(1))
     }
 }
