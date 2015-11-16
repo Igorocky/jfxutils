@@ -49,11 +49,13 @@ object JfxUtils {
         )
     }
 
+    //todo: make it implicit on Node, pass varargs
     def bindShortcutActionTrigger(node: Node, actionsList: List[Action]): Unit = {
         val shortcutActionTrigger = new ShortcutActionTrigger(actionsList)
         node.flt(KeyEvent.ANY){e => shortcutActionTrigger.triggerActionIfNecessary(e)}
     }
 
+    //todo: make it implicit on Tab, pass varargs
     def bindShortcutActionTrigger(tab: Tab, actionsList: List[Action]): Unit = {
         val shortcutActionTrigger = new ShortcutActionTrigger(actionsList)
         val hnd = eventHandler(KeyEvent.ANY){e =>

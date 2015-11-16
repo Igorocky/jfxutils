@@ -63,6 +63,7 @@ trait Action {
 }
 
 object Action {
+    //todo: make it implicit method on Action
     def bind(action: Action, button: Button): Unit = {
         action.bind(new ActionStateAware {
             private val initialButtonText = button.getText
