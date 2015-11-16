@@ -19,7 +19,10 @@ object JfxFuture {
 
     def apply[T](proc: => T, forcibly: Boolean)(implicit log: Logger): Future[T] = {
         val prom = Promise[T]
-        if (forcibly || jfxThread != Thread.currentThread()) {
+        if (jfxThread == null) {
+            log.warn("jfxThread == null")
+        }
+        if (forcibly || (jfxThread != null && jfxThread != Thread.currentThread())) {
             Platform.runLater(new Runnable {
                 override def run(): Unit = {
                     completePromise(prom, proc)

@@ -68,7 +68,7 @@ object JfxUtils {
         if (tab.getTabPane() != null) {
             tab.getTabPane().flt(hnd)
         }
-        tab.tabPaneProperty().addListener(CngListener[TabPane]{v =>
+        tab.tabPaneProperty().addListener(ChgListener[TabPane]{ v =>
             if (v.oldValue != null) {
                 v.oldValue.remFlt(hnd)
             }
