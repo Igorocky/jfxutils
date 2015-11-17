@@ -1,7 +1,7 @@
 package org.igye.jfxutils.properties
 
 import java.util
-import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.{SimpleStringProperty, SimpleBooleanProperty, SimpleIntegerProperty}
 import javafx.collections.FXCollections
 
 import org.igye.jfxutils.{listToListBindingOperators, propertyToBindingOperators}
@@ -67,5 +67,37 @@ class BindingOperatorsTest {
         Assert.assertEquals(2, source.get(0))
         Assert.assertEquals("3_", target.get(1))
         Assert.assertEquals(3, source.get(1))
+
+        source.clear()
+        Assert.assertEquals(0, source.size())
+        Assert.assertEquals(0, target.size())
+    }
+
+    @Test
+    def testAnyExpressionBinding(): Unit = {
+        val intProp = new SimpleIntegerProperty(1)
+        val boolProp = new SimpleBooleanProperty(false)
+        val strProp = new SimpleStringProperty("A")
+        val strProp2 = new SimpleStringProperty("Z")
+
+        val targetStrProp = new SimpleStringProperty()
+
+        targetStrProp <== Expr(intProp, boolProp, strProp){
+            s"${intProp.get}:${boolProp.get}:${strProp.get}:${strProp2.get}"
+        }
+
+        Assert.assertEquals("1:false:A:Z", targetStrProp.get())
+
+        intProp.set(2)
+        Assert.assertEquals("2:false:A:Z", targetStrProp.get())
+
+        boolProp.set(true)
+        Assert.assertEquals("2:true:A:Z", targetStrProp.get())
+
+        strProp.set("B")
+        Assert.assertEquals("2:true:B:Z", targetStrProp.get())
+
+        strProp2.set("X")
+        Assert.assertEquals("2:true:B:Z", targetStrProp.get())
     }
 }
