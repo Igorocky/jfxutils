@@ -8,16 +8,23 @@ import org.igye.jfxutils.exceptions.JfxUtilsException
 import scala.collection.JavaConversions._
 
 class ListOperators[T](targetList: java.util.List[T]) {
-    def <== [S] (sourceList: ObservableList[S], mapper: S => T): Unit = {
+    def <== [S] (sourceList: ObservableList[S],
+                 targetElemConstructor: S => T, targetElemDestructor: T => Unit = null): Unit = {
         sourceList.addListener(ListChgListener[S]{chg =>
-            def handleRemoved(): Unit = {
-                for (cnt <- 0 until chg.getRemovedSize) {
-                    targetList.remove(chg.getFrom)
-                }
+            def handleAdded(): Unit = {
+                targetList.addAll(
+                    chg.getFrom,
+                    chg.getAddedSubList.map(targetElemConstructor)
+                )
             }
 
-            def handleAdded(): Unit = {
-                targetList.addAll(chg.getFrom, chg.getAddedSubList.map(mapper))
+            def handleRemoved(): Unit = {
+                for (cnt <- 0 until chg.getRemovedSize) {
+                    val removedElem = targetList.remove(chg.getFrom)
+                    if (targetElemDestructor != null) {
+                        targetElemDestructor(removedElem)
+                    }
+                }
             }
 
             while (chg.next()) {

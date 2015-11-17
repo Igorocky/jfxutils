@@ -46,9 +46,11 @@ class BindingOperatorsTest {
     def testListBinding(): Unit = {
         val source = FXCollections.observableArrayList[Int]()
         val target = new util.ArrayList[String]()
-        val mapper = (i: Int) => i.toString + "_"
+        val constructor = (i: Int) => i.toString + "_"
+        var destructedElems = List[String]()
+        val destructor = (s: String) => destructedElems ::= s
 
-        target <== (source, mapper)
+        target <== (sourceList = source, targetElemConstructor = constructor, targetElemDestructor = destructor)
 
         Assert.assertEquals(0, source.size())
         Assert.assertEquals(0, target.size())
@@ -67,10 +69,16 @@ class BindingOperatorsTest {
         Assert.assertEquals(2, source.get(0))
         Assert.assertEquals("3_", target.get(1))
         Assert.assertEquals(3, source.get(1))
+        Assert.assertEquals(1, destructedElems.size)
+        Assert.assertTrue(destructedElems.contains("1_"))
 
         source.clear()
         Assert.assertEquals(0, source.size())
         Assert.assertEquals(0, target.size())
+        Assert.assertEquals(3, destructedElems.size)
+        Assert.assertTrue(destructedElems.contains("1_"))
+        Assert.assertTrue(destructedElems.contains("2_"))
+        Assert.assertTrue(destructedElems.contains("3_"))
     }
 
     @Test
