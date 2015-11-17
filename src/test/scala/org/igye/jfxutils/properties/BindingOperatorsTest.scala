@@ -116,6 +116,9 @@ class BindingOperatorsTest {
         value ==> ChgListener {chg =>
             mirror = chg.newValue.asInstanceOf[Int]
         }
+        val unusedListener = ChgListener[Number] {chg =>
+            Unit
+        }
 
         Assert.assertEquals(5, mirror)
 
@@ -124,5 +127,7 @@ class BindingOperatorsTest {
 
         value.set(0)
         Assert.assertEquals(0, mirror)
+
+        value.removeListener(unusedListener)
     }
 }
