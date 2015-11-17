@@ -1,18 +1,23 @@
 package org.igye
 
 import javafx.beans.property.Property
+import javafx.beans.value.ObservableValue
 import javafx.scene.Node
 
-import org.igye.jfxutils.properties.{ListBindingOperators, PropertyBindingOperators}
+import org.igye.jfxutils.properties.{ObservableValueOperators, ListOperators, PropertyOperators}
 
 package object jfxutils {
     implicit def nodeToHasEvens(node: Node) = new HasEvents(node)
 
-    implicit def propertyToBindingOperators[T](property: Property[T]): PropertyBindingOperators[T] = {
-        new PropertyBindingOperators[T](property)
+    implicit def propertyToPropertyOperators[T](property: Property[T]): PropertyOperators[T] = {
+        new PropertyOperators(property)
     }
 
-    implicit def listToListBindingOperators[T](list: java.util.List[T]): ListBindingOperators[T] = {
-        new ListBindingOperators[T](list)
+    implicit def listToListOperators[T](list: java.util.List[T]): ListOperators[T] = {
+        new ListOperators(list)
+    }
+
+    implicit def observableValueToObservableValueOperators[T](observableValue: ObservableValue[T]): ObservableValueOperators[T] = {
+        new ObservableValueOperators(observableValue)
     }
 }

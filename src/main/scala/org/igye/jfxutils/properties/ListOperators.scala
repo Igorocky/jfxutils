@@ -7,7 +7,7 @@ import org.igye.jfxutils.exceptions.JfxUtilsException
 
 import scala.collection.JavaConversions._
 
-class ListBindingOperators[T](targetList: java.util.List[T]) {
+class ListOperators[T](targetList: java.util.List[T]) {
     def <== [S] (sourceList: ObservableList[S], mapper: S => T): Unit = {
         sourceList.addListener(ListChgListener[S]{chg =>
             def handleRemoved(): Unit = {

@@ -6,7 +6,7 @@ import org.igye.jfxutils.JfxActionEventHandler
 
 trait Action {
     val description: String
-    protected[this] def onAction()
+    protected def onAction()
 
     private var boundObjects: Vector[ActionStateAware] = Vector[ActionStateAware]()
 

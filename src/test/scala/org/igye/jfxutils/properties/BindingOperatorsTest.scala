@@ -1,10 +1,10 @@
 package org.igye.jfxutils.properties
 
 import java.util
-import javafx.beans.property.{SimpleStringProperty, SimpleBooleanProperty, SimpleIntegerProperty}
+import javafx.beans.property.{SimpleBooleanProperty, SimpleIntegerProperty, SimpleStringProperty}
 import javafx.collections.FXCollections
 
-import org.igye.jfxutils.{listToListBindingOperators, propertyToBindingOperators}
+import org.igye.jfxutils.{listToListOperators, ChgListener, observableValueToObservableValueOperators, propertyToPropertyOperators}
 import org.junit.{Assert, Test}
 
 class BindingOperatorsTest {
@@ -99,5 +99,22 @@ class BindingOperatorsTest {
 
         strProp2.set("X")
         Assert.assertEquals("2:true:B:Z", targetStrProp.get())
+    }
+
+    @Test
+    def testObservableValueAddChangeListenerOperator(): Unit = {
+        val value = new SimpleIntegerProperty(0)
+        var mirror = 5
+        value ==> ChgListener {chg =>
+            mirror = chg.newValue.asInstanceOf[Int]
+        }
+
+        Assert.assertEquals(5, mirror)
+
+        value.set(6)
+        Assert.assertEquals(6, mirror)
+
+        value.set(0)
+        Assert.assertEquals(0, mirror)
     }
 }
