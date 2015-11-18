@@ -2,7 +2,7 @@ package org.igye.jfxutils.action
 
 import javafx.scene.control.{Button, Tooltip}
 
-import org.igye.jfxutils.events.JfxActionEventHandler
+import org.igye.jfxutils.events.Hnd
 
 trait Action {
     val description: String
@@ -86,7 +86,7 @@ object Action {
             override def thisWasBoundToAction(action: Action): Unit = {
                 button.setTooltip(new Tooltip(action.description))
                 button.setDisable(!action.isEnabled)
-                button.setOnAction(JfxActionEventHandler {e =>
+                button.setOnAction(Hnd { e =>
                     action.trigger()
                 })
                 if (action.getShortcut.isDefined) {

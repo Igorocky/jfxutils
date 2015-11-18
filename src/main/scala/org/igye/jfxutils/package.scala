@@ -5,7 +5,7 @@ import javafx.beans.value.ObservableValue
 import javafx.scene.Node
 
 import org.igye.jfxutils.events.HasEvents
-import org.igye.jfxutils.properties.{ObservableValueOperators, ListOperators, PropertyOperators}
+import org.igye.jfxutils.properties.{ListOperators, ObservableValueOperators, PropertyOperators}
 
 package object jfxutils {
     implicit def nodeToHasEvens(node: Node) = new HasEvents(node)

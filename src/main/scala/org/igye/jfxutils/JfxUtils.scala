@@ -1,7 +1,6 @@
 package org.igye.jfxutils
 
-import javafx.beans.value.{ChangeListener, ObservableValue}
-import javafx.event.{Event, EventHandler, EventTarget, EventType}
+import javafx.event.EventTarget
 import javafx.geometry.Insets
 import javafx.scene.Node
 import javafx.scene.control.{Tab, TabPane}
@@ -11,7 +10,7 @@ import javafx.scene.paint.Color
 import javafx.scene.shape.{StrokeLineCap, StrokeLineJoin, StrokeType}
 
 import org.igye.jfxutils.action.{Action, ShortcutActionTrigger}
-import org.igye.jfxutils.events.{Hnd, EventHandlerInfo}
+import org.igye.jfxutils.events.Hnd
 import org.igye.jfxutils.properties.ChgListener
 
 import scala.reflect.ClassTag
