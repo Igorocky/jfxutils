@@ -1,19 +1,16 @@
 package org.igye.jfxutils
 
 import javafx.scene.{Parent, Scene}
-import javafx.stage.{Modality, Stage}
+import javafx.stage.Stage
 
 trait Window {
-    protected var stage: Stage = _
-
-    protected def initWindow(rootNode: Parent, modality: Modality): Unit = {
-        stage = new Stage()
-        stage.setScene(new Scene(rootNode))
-        stage.initModality(modality)
-    }
+    var stage: Stage = _
 
     protected def initWindow(rootNode: Parent): Unit = {
-        initWindow(rootNode, Modality.NONE)
+        if (stage == null) {
+            stage = new Stage()
+        }
+        stage.setScene(new Scene(rootNode))
     }
 
     def open(): Unit = {
