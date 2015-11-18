@@ -2,7 +2,7 @@ package org.igye.jfxutils.properties
 
 import javafx.beans.binding.ObjectBinding
 
-import org.igye.jfxutils.{observableValueToObservableValueOperators, ChgListener}
+import org.igye.jfxutils.observableValueToObservableValueOperators
 
 trait Trigger {
     var action: () => Unit = _

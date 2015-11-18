@@ -1,6 +1,6 @@
-package org.igye.jfxutils
+package org.igye.jfxutils.events
 
-import javafx.event.{EventHandler, Event}
+import javafx.event.{Event, EventHandler}
 
 object JfxEventHandler {
     def apply(hnd: Event => Any) = new EventHandler[Event] {

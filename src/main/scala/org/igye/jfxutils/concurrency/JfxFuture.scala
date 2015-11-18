@@ -1,4 +1,4 @@
-package org.igye.jfxutils
+package org.igye.jfxutils.concurrency
 
 import javafx.application.Platform
 

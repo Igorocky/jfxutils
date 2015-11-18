@@ -1,6 +1,6 @@
-package org.igye.jfxutils
+package org.igye.jfxutils.events
 
-import javafx.event.{EventHandler, EventType, Event}
+import javafx.event.{Event, EventHandler, EventType}
 import javafx.scene.Node
 
 class HasEvents(node: Node) {

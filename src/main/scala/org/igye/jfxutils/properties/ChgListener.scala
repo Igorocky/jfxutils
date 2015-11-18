@@ -1,6 +1,6 @@
-package org.igye.jfxutils
+package org.igye.jfxutils.properties
 
-import javafx.beans.value.{ObservableValue, ChangeListener}
+import javafx.beans.value.{ChangeListener, ObservableValue}
 
 case class OldNewValues[T](observable: ObservableValue[_ <: T], oldValue: T, newValue:T)
 

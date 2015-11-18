@@ -2,7 +2,7 @@ package org.igye.jfxutils.action
 
 import javafx.scene.control.{Button, Tooltip}
 
-import org.igye.jfxutils.JfxActionEventHandler
+import org.igye.jfxutils.events.JfxActionEventHandler
 
 trait Action {
     val description: String

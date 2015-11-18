@@ -1,4 +1,4 @@
-package org.igye.jfxutils
+package org.igye.jfxutils.concurrency
 
 import org.apache.logging.log4j.Logger
 

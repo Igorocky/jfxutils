@@ -1,4 +1,4 @@
-package org.igye.jfxutils
+package org.igye.jfxutils.properties
 
 import javafx.collections.ListChangeListener
 import javafx.collections.ListChangeListener.Change

@@ -2,7 +2,6 @@ package org.igye.jfxutils.properties
 
 import javafx.collections.ObservableList
 
-import org.igye.jfxutils.ListChgListener
 import org.igye.jfxutils.exceptions.JfxUtilsException
 
 import scala.collection.JavaConversions._

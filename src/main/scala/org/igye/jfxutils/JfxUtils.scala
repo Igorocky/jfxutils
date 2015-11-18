@@ -11,6 +11,8 @@ import javafx.scene.paint.Color
 import javafx.scene.shape.{StrokeLineCap, StrokeLineJoin, StrokeType}
 
 import org.igye.jfxutils.action.{Action, ShortcutActionTrigger}
+import org.igye.jfxutils.events.{Hnd, EventHandlerInfo}
+import org.igye.jfxutils.properties.ChgListener
 
 import scala.reflect.ClassTag
 
@@ -38,17 +40,6 @@ object JfxUtils {
         new Background(new BackgroundFill(fillColor, CornerRadii.EMPTY, new Insets(0)))
     }
 
-    def eventHandler[T <: Event](eventType: EventType[T])(hnd: T => Unit) = {
-        EventHandlerInfo(
-            eventType,
-            new EventHandler[T] {
-                override def handle(event: T): Unit = {
-                    hnd(event)
-                }
-            }
-        )
-    }
-
     //todo: make it implicit on Node, pass varargs
     def bindShortcutActionTrigger(node: Node, actionsList: List[Action]): Unit = {
         val shortcutActionTrigger = new ShortcutActionTrigger(actionsList)
@@ -58,7 +49,7 @@ object JfxUtils {
     //todo: make it implicit on Tab, pass varargs
     def bindShortcutActionTrigger(tab: Tab, actionsList: List[Action]): Unit = {
         val shortcutActionTrigger = new ShortcutActionTrigger(actionsList)
-        val hnd = eventHandler(KeyEvent.ANY){e =>
+        val hnd = Hnd(KeyEvent.ANY){ e =>
             findParent[TabPane](e.getTarget).foreach {tabPane =>
                 if (tabPane.getSelectionModel.getSelectedItem == tab) {
                     shortcutActionTrigger.triggerActionIfNecessary(e)
