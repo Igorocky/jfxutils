@@ -7,19 +7,13 @@ import org.apache.logging.log4j.Logger
 import scala.concurrent.{Future, Promise}
 
 object JfxFuture {
-    private var jfxThread: Thread = _
-
-    def setJfxThread(thread: Thread): Unit = {
-        jfxThread = thread
-    }
-
     def apply[T](proc: => T)(implicit log: Logger): Future[T] = {
         apply(proc, false)
     }
 
     def apply[T](proc: => T, forcibly: Boolean)(implicit log: Logger): Future[T] = {
         val prom = Promise[T]
-        if (forcibly || jfxThread != Thread.currentThread()) {
+        if (forcibly || !Platform.isFxApplicationThread) {
             Platform.runLater(new Runnable {
                 override def run(): Unit = {
                     completePromise(prom, proc)
