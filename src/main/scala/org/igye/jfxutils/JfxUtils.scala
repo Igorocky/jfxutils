@@ -9,6 +9,7 @@ import javafx.scene.layout._
 import javafx.scene.paint.Color
 import javafx.scene.shape.{StrokeLineCap, StrokeLineJoin, StrokeType}
 
+import org.igye.jfxutils.action.ActionType.{FILTER, HANDLER}
 import org.igye.jfxutils.action.{Action, ShortcutActionTrigger}
 import org.igye.jfxutils.events.Hnd
 import org.igye.jfxutils.properties.ChgListener
@@ -16,7 +17,7 @@ import org.igye.jfxutils.properties.ChgListener
 import scala.reflect.ClassTag
 
 object JfxUtils {
-    def createBorder(color: Color) = {
+    def createBorder(color: Color, borderWidths: Double): Border = {
         new Border(
             new BorderStroke(
                 color,
@@ -29,10 +30,14 @@ object JfxUtils {
                     null
                 ),
                 CornerRadii.EMPTY,
-                new BorderWidths(3),
+                new BorderWidths(borderWidths),
                 new Insets(0)
             )
         )
+    }
+
+    def createBorder(color: Color): Border = {
+        createBorder(color, 3)
     }
 
     def createBackground(fillColor: Color) = {
@@ -41,31 +46,44 @@ object JfxUtils {
 
     //todo: make it implicit on Node, pass varargs
     def bindShortcutActionTrigger(node: Node, actionsList: List[Action]): Unit = {
-        val shortcutActionTrigger = new ShortcutActionTrigger(actionsList)
-        node.flt(KeyEvent.ANY){e => shortcutActionTrigger.triggerActionIfNecessary(e)}
+        val filtersShortcutActionTrigger = new ShortcutActionTrigger(actionsList.filter(_.actionType == FILTER))
+        node.flt(KeyEvent.ANY){e => filtersShortcutActionTrigger.triggerActionIfNecessary(e)}
+        val handlersShortcutActionTrigger = new ShortcutActionTrigger(actionsList.filter(_.actionType == HANDLER))
+        node.hnd(KeyEvent.ANY){e => handlersShortcutActionTrigger.triggerActionIfNecessary(e)}
     }
 
     //todo: make it implicit on Tab, pass varargs
     def bindShortcutActionTrigger(tab: Tab, actionsList: List[Action]): Unit = {
-        val shortcutActionTrigger = new ShortcutActionTrigger(actionsList)
+        val filtersShortcutActionTrigger = new ShortcutActionTrigger(actionsList.filter(_.actionType == FILTER))
+        val flt = Hnd(KeyEvent.ANY){ e =>
+            findParent[TabPane](e.getTarget).foreach {tabPane =>
+                if (tabPane.getSelectionModel.getSelectedItem == tab) {
+                    filtersShortcutActionTrigger.triggerActionIfNecessary(e)
+                }
+            }
+        }
+        val handlersShortcutActionTrigger = new ShortcutActionTrigger(actionsList.filter(_.actionType == HANDLER))
         val hnd = Hnd(KeyEvent.ANY){ e =>
             findParent[TabPane](e.getTarget).foreach {tabPane =>
                 if (tabPane.getSelectionModel.getSelectedItem == tab) {
-                    shortcutActionTrigger.triggerActionIfNecessary(e)
+                    handlersShortcutActionTrigger.triggerActionIfNecessary(e)
                 }
             }
         }
         if (tab.getTabPane() != null) {
-            tab.getTabPane().flt(hnd)
+            tab.getTabPane().flt(flt)
+            tab.getTabPane().hnd(hnd)
         }
-        tab.tabPaneProperty().addListener(ChgListener[TabPane]{ v =>
-            if (v.oldValue != null) {
-                v.oldValue.remFlt(hnd)
+        tab.tabPaneProperty() ==> ChgListener{chg=>
+            if (chg.oldValue != null) {
+                chg.oldValue.remFlt(flt)
+                chg.oldValue.remHnd(hnd)
             }
-            if (v.newValue != null) {
-                v.newValue.flt(hnd)
+            if (chg.newValue != null) {
+                chg.newValue.flt(flt)
+                chg.newValue.hnd(hnd)
             }
-        })
+        }
     }
 
     def findParent[T: ClassTag](eventTarget: EventTarget): Option[T] = {

@@ -13,7 +13,7 @@ import org.igye.jfxutils.{JfxUtils, nodeToHasEvens}
 
 import scala.concurrent.Future
 
-class AutocompleteList(posX: Double, posY: Double, width: Double, height: Double,
+private class AutocompleteList(posX: Double, posY: Double, width: Double, height: Double,
                        stackPane: StackPane, textToComplete: String,
                        loadingImage: ImageView, query: AutocompleteQuery,
                        itemSelectedEventHandler: () => Unit, escapePressedEventHandler: () => Unit)
@@ -45,6 +45,7 @@ class AutocompleteList(posX: Double, posY: Double, width: Double, height: Double
     private var selectedIdx = 0
 
     private val vbox = new VBox()
+    vbox.setBackground(JfxUtils.createBackground(Color.WHITE))
     private val scrollPane = new ScrollPane(vbox)
 
     RunInJfxThread {
@@ -78,14 +79,15 @@ class AutocompleteList(posX: Double, posY: Double, width: Double, height: Double
                             scrollPane.setMinHeight(height)
                         }
                     }
+                    scrollPane.requestFocus()
                 }
             }
         }
     }
 
     private def prepareDropDownPane(pane: Region): Unit = {
-        pane.setBorder(JfxUtils.createBorder(Color.YELLOW))
-        pane.setBackground(JfxUtils.createBackground(Color.rgb(235, 244, 254)))
+        pane.setBorder(JfxUtils.createBorder(Color.GRAY, 1))
+        pane.setBackground(JfxUtils.createBackground(Color.WHITE))
         pane.setLayoutX(posX)
         pane.setLayoutY(posY)
         pane.setMinWidth(width)
@@ -121,15 +123,14 @@ class AutocompleteList(posX: Double, posY: Double, width: Double, height: Double
                 }
             }
         }
-        scrollPane.hnd(KeyEvent.KEY_TYPED){e=>
-            if (e.getCharacter.equals("\r")) {
-                itemSelectedEventHandler()
-            } else if (e.getCharacter.equals("\u001B")) {
-                escapePressedEventHandler()
-            }
-        }
         scrollPane.hnd(KeyEvent.KEY_PRESSED){e=>
-            if (e.getCode == KeyCode.DOWN) {
+            if (e.getCode == KeyCode.ENTER) {
+                itemSelectedEventHandler()
+                e.consume()
+            } else if (e.getCode == KeyCode.ESCAPE) {
+                escapePressedEventHandler()
+                e.consume()
+            } else if (e.getCode == KeyCode.DOWN) {
                 down()
             } else if (e.getCode == KeyCode.UP) {
                 up()
@@ -213,7 +214,7 @@ object AutocompleteList {
     private val imageView: ImageView = new ImageView(new Image("ajax-loader.gif"))
     private var lastCreatedInst: Option[AutocompleteList] = None
 
-    def apply(textField: TextField, height: Double, stackPane: StackPane, textToComplete: String,
+    private def apply(textField: TextField, height: Double, stackPane: StackPane, textToComplete: String,
               query: AutocompleteQuery,
               itemSelectedEventHandler: ()=> Unit, escapePressedEventHandler: ()=> Unit)
              (implicit log: Logger, executor : scala.concurrent.ExecutionContext): AutocompleteList = {
@@ -248,22 +249,12 @@ object AutocompleteList {
                 }
             }
         }
-        textField.hnd(KeyEvent.KEY_TYPED){e=>
-            if (e.getCharacter == " " && e.isControlDown) {
+        textField.hnd(KeyEvent.KEY_PRESSED){e=>
+            if (e.getCode == KeyCode.SPACE && e.isControlDown) {
                 autoCmp = Some(AutocompleteList(
                     textField, height, stackPane, textField.getText, query, () => onItemSelected, () => onEscape
                 ))
-            } else if (e.getCharacter.equals("\u001B")) {
-                onEscape
-            } else if (e.getCharacter.equals("\r")) {
-                onItemSelected
-            }
-        }
-        textField.hnd(KeyEvent.KEY_PRESSED){e=>
-            if (e.getCode == KeyCode.DOWN) {
-                autoCmp.foreach(_.down())
-            } else if (e.getCode == KeyCode.UP) {
-                autoCmp.foreach(_.up())
+                e.consume()
             }
         }
     }

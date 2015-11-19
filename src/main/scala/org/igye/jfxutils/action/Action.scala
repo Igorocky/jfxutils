@@ -2,7 +2,14 @@ package org.igye.jfxutils.action
 
 import javafx.scene.control.{Button, Tooltip}
 
+import org.igye.commonutils.Enum
 import org.igye.jfxutils.events.Hnd
+
+case class ActionType(name: String)
+object ActionType extends Enum[ActionType] {
+    val FILTER = addElem(ActionType("FILTER"))
+    val HANDLER = addElem(ActionType("HANDLER"))
+}
 
 trait Action {
     val description: String
@@ -10,6 +17,7 @@ trait Action {
 
     private var boundObjects: Vector[ActionStateAware] = Vector[ActionStateAware]()
 
+    var actionType = ActionType.FILTER
     private var shortcut: Option[Shortcut] = None
     private var enabled: Boolean = true
 
