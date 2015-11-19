@@ -1,17 +1,42 @@
 package org.igye.jfxutils.autocomplete
 
+import javafx.scene.Node
 import javafx.scene.control.{ScrollPane, TextField}
 import javafx.scene.image.{Image, ImageView}
 import javafx.scene.input.{KeyCode, KeyEvent, MouseEvent}
-import javafx.scene.layout.{Pane, Region, StackPane, VBox}
+import javafx.scene.layout._
 import javafx.scene.paint.Color
 import javafx.scene.text.Text
 
 import org.apache.logging.log4j.Logger
 import org.igye.jfxutils.concurrency.{RunInJfxThread, RunInJfxThreadForcibly}
-import org.igye.jfxutils.{JfxUtils, nodeToHasEvens}
+import org.igye.jfxutils.properties.ChgListener
+import org.igye.jfxutils.{observableValueToObservableValueOperators, propertyToPropertyOperators, JfxUtils, nodeToHasEvens}
 
 import scala.concurrent.Future
+
+private class ResultsPane extends ScrollPane {
+    private val vbox = new VBox()
+    setContent(vbox)
+    this.hnd(MouseEvent.ANY){e => e.consume()}
+    vbox.backgroundProperty() <== backgroundProperty()
+
+    def correctViewPort(y1: Double, y2: Double): Unit = {
+        val H = vbox.getLayoutBounds.getHeight
+        val h = getViewportBounds.getHeight
+        val y = getVvalue*(H - h)
+        val ys = getVvalue*(H - h) + h
+        if (y1 < y) {
+            setVvalue(y1/(H - h))
+        } else if (y2 > ys) {
+            setVvalue((y2 - h)/(H - h))
+        }
+    }
+
+    def addNode(node: Node): Unit = {
+        vbox.getChildren.add(node)
+    }
+}
 
 private class AutocompleteList(posX: Double, posY: Double, width: Double, height: Double,
                        stackPane: StackPane, textToComplete: String,
@@ -42,10 +67,7 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
 
     private var queryResult: Option[List[AutocompleteItem]] = None
     private var selectedIdx = 0
-
-    private val vbox = new VBox()
-    vbox.setBackground(JfxUtils.createBackground(Color.WHITE))
-    private val scrollPane = new ScrollPane(vbox)
+    private var resultsPane: ResultsPane = _
 
     RunInJfxThread {
         stackPane.getChildren.add(upperPane)
@@ -66,16 +88,17 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
             if (!closed && !resultsAreReady) {
                 resultsAreReady = true
                 upperPane.getChildren.clear()
-                upperPane.getChildren.add(createPaneWithResults(list))
+                resultsPane = createPaneWithResults(list)
+                upperPane.getChildren.add(resultsPane)
                 RunInJfxThreadForcibly {
                     if (queryResult.isDefined) {
                         var scrollPanePrefHeight = 0.0
                         queryResult.get.foreach(scrollPanePrefHeight += _.node.getLayoutBounds.getHeight)
                         scrollPanePrefHeight += 25
                         if (scrollPanePrefHeight < height) {
-                            scrollPane.setMinHeight(scrollPanePrefHeight)
+                            resultsPane.setMinHeight(scrollPanePrefHeight)
                         } else {
-                            scrollPane.setMinHeight(height)
+                            resultsPane.setMinHeight(height)
                         }
                     }
                 }
@@ -101,16 +124,16 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
     }
 
     private def createPaneWithResults(list: List[AutocompleteItem]) = {
-        scrollPane.hnd(MouseEvent.ANY){e => e.consume()}
-        prepareDropDownPane(scrollPane)
+        val paneWithResults = new ResultsPane
+        prepareDropDownPane(paneWithResults)
         if (list.isEmpty) {
-            vbox.getChildren.add(new Text("Nothing found"))
+            paneWithResults.addNode(new Text("Nothing found"))
         } else {
             queryResult = Option(list)
             list(0).select()
             for (i <- 0 until list.size) {
                 val node = list(i).node
-                vbox.getChildren.add(node)
+                paneWithResults.addNode(node)
                 node.hnd(MouseEvent.MOUSE_CLICKED){e =>
                     queryResult.get(selectedIdx).unselect()
                     selectedIdx = i
@@ -121,7 +144,7 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
                 }
             }
         }
-        scrollPane
+        paneWithResults
     }
 
     private def open(textToComplete: String): Unit = {
@@ -142,18 +165,6 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
         }
     }
 
-    private def correctViewPort(x1: Double, x2: Double): Unit = {
-        val H = vbox.getLayoutBounds.getHeight
-        val h = scrollPane.getViewportBounds.getHeight
-        val x = scrollPane.getVvalue*(H - h)
-        val xs = scrollPane.getVvalue*(H - h) + h
-        if (x1 < x) {
-            scrollPane.setVvalue(x1/(H - h))
-        } else if (x2 > xs) {
-            scrollPane.setVvalue((x2 - h)/(H - h))
-        }
-    }
-
     def down(): Unit = {
         if (queryResult.isDefined) {
             RunInJfxThread {
@@ -165,7 +176,7 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
                 val item = queryResult.get(selectedIdx)
                 item.select()
                 val node = item.node
-                correctViewPort(node.getLayoutY, node.getLayoutY + node.getLayoutBounds.getHeight)
+                resultsPane.correctViewPort(node.getLayoutY, node.getLayoutY + node.getLayoutBounds.getHeight)
             }
         }
     }
@@ -181,7 +192,7 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
                 val item = queryResult.get(selectedIdx)
                 item.select()
                 val node = item.node
-                correctViewPort(node.getLayoutY, node.getLayoutY + node.getLayoutBounds.getHeight)
+                resultsPane.correctViewPort(node.getLayoutY, node.getLayoutY + node.getLayoutBounds.getHeight)
             }
         }
     }
@@ -252,6 +263,11 @@ object AutocompleteList {
                     onItemSelected()
                     e.consume()
                 }
+            }
+        }
+        textField.focusedProperty() ==> ChgListener{chg=>
+            if (!chg.newValue) {
+                onEscape()
             }
         }
     }
