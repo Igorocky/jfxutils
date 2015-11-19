@@ -37,7 +37,7 @@ object JfxUtils {
     }
 
     def createBorder(color: Color): Border = {
-        createBorder(color, 3)
+        createBorder(color, 1)
     }
 
     def createBackground(fillColor: Color) = {

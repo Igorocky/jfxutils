@@ -2,8 +2,8 @@ package org.igye.jfxutils.autocomplete
 
 import javafx.scene.Node
 
-trait AutocompleteItem {
-    def node: Node
-    def select()
-    def unselect()
+trait AutocompleteItem extends Node {
+    def select(): Unit
+    def unselect(): Unit
+    def hasFocus: Boolean
 }

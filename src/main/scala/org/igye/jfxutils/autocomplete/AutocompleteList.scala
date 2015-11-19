@@ -11,10 +11,17 @@ import javafx.scene.text.Text
 import org.apache.logging.log4j.Logger
 import org.igye.jfxutils.concurrency.{RunInJfxThread, RunInJfxThreadForcibly}
 import org.igye.jfxutils.properties.ChgListener
-import org.igye.jfxutils.{observableValueToObservableValueOperators, propertyToPropertyOperators, JfxUtils, nodeToHasEvens}
+import org.igye.jfxutils.{JfxUtils, nodeToHasEvens, observableValueToObservableValueOperators, propertyToPropertyOperators}
 
+import scala.collection.JavaConversions._
 import scala.concurrent.Future
 
+/*
+    Test notes:
+    1) check that all scroll bars work.
+    2) it is possible to scroll the horizontal bar to the rightmost position and then navigate through item by up/down keys
+    3) when textedit looses focus the autocomplete should close
+ */
 private class ResultsPane extends ScrollPane {
     private val vbox = new VBox()
     setContent(vbox)
@@ -33,8 +40,16 @@ private class ResultsPane extends ScrollPane {
         }
     }
 
-    def addNode(node: Node): Unit = {
-        vbox.getChildren.add(node)
+    def addItem(item: Node): Unit = {
+        vbox.getChildren.add(item)
+    }
+
+    def hasFocus = {
+        isFocused || vbox.isFocused ||
+            vbox.getChildren.find{i =>
+                i.isInstanceOf[AutocompleteItem] && i.asInstanceOf[AutocompleteItem].hasFocus ||
+                i.isFocused
+            }.isDefined
     }
 }
 
@@ -93,7 +108,7 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
                 RunInJfxThreadForcibly {
                     if (queryResult.isDefined) {
                         var scrollPanePrefHeight = 0.0
-                        queryResult.get.foreach(scrollPanePrefHeight += _.node.getLayoutBounds.getHeight)
+                        queryResult.get.foreach(scrollPanePrefHeight += _.getLayoutBounds.getHeight)
                         scrollPanePrefHeight += 25
                         if (scrollPanePrefHeight < height) {
                             resultsPane.setMinHeight(scrollPanePrefHeight)
@@ -107,7 +122,7 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
     }
 
     private def prepareDropDownPane(pane: Region): Unit = {
-        pane.setBorder(JfxUtils.createBorder(Color.GRAY, 1))
+        pane.setBorder(JfxUtils.createBorder(Color.GRAY))
         pane.setBackground(JfxUtils.createBackground(Color.WHITE))
         pane.setLayoutX(posX)
         pane.setLayoutY(posY)
@@ -127,13 +142,13 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
         val paneWithResults = new ResultsPane
         prepareDropDownPane(paneWithResults)
         if (list.isEmpty) {
-            paneWithResults.addNode(new Text("Nothing found"))
+            paneWithResults.addItem(new Text("Nothing found"))
         } else {
             queryResult = Option(list)
             list(0).select()
             for (i <- 0 until list.size) {
-                val node = list(i).node
-                paneWithResults.addNode(node)
+                val node = list(i)
+                paneWithResults.addItem(node)
                 node.hnd(MouseEvent.MOUSE_CLICKED){e =>
                     queryResult.get(selectedIdx).unselect()
                     selectedIdx = i
@@ -175,8 +190,7 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
                 }
                 val item = queryResult.get(selectedIdx)
                 item.select()
-                val node = item.node
-                resultsPane.correctViewPort(node.getLayoutY, node.getLayoutY + node.getLayoutBounds.getHeight)
+                resultsPane.correctViewPort(item.getLayoutY, item.getLayoutY + item.getLayoutBounds.getHeight)
             }
         }
     }
@@ -191,8 +205,7 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
                 }
                 val item = queryResult.get(selectedIdx)
                 item.select()
-                val node = item.node
-                resultsPane.correctViewPort(node.getLayoutY, node.getLayoutY + node.getLayoutBounds.getHeight)
+                resultsPane.correctViewPort(item.getLayoutY, item.getLayoutY + item.getLayoutBounds.getHeight)
             }
         }
     }
@@ -204,6 +217,8 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
             None
         }
     }
+
+    def hasFocus = resultsPane != null && resultsPane.hasFocus
 }
 
 object AutocompleteList {
@@ -266,7 +281,7 @@ object AutocompleteList {
             }
         }
         textField.focusedProperty() ==> ChgListener{chg=>
-            if (!chg.newValue) {
+            if (autoCmp.isDefined && !chg.newValue && !autoCmp.get.hasFocus) {
                 onEscape()
             }
         }
