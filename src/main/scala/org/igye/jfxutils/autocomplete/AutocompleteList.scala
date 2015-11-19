@@ -16,11 +16,11 @@ import scala.concurrent.Future
 private class AutocompleteList(posX: Double, posY: Double, width: Double, height: Double,
                        stackPane: StackPane, textToComplete: String,
                        loadingImage: ImageView, query: AutocompleteQuery,
-                       itemSelectedEventHandler: () => Unit, escapePressedEventHandler: () => Unit)
+                       itemSelectedEventHandler: () => Unit)
                               (implicit log: Logger, executor : scala.concurrent.ExecutionContext) {
     private def this(textField: TextField, height: Double, stackPane: StackPane,
                      loadingImage: ImageView, query: AutocompleteQuery,
-                     itemSelectedEventHandler: ()=> Unit, escapePressedEventHandler: ()=> Unit)
+                     itemSelectedEventHandler: ()=> Unit)
                     (implicit log: Logger, executor : scala.concurrent.ExecutionContext) = this(
         textField.localToScene(0, 0).getX,
         textField.localToScene(0, textField.getLayoutBounds.getHeight).getY,
@@ -30,8 +30,7 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
         textField.getText,
         loadingImage,
         query,
-        itemSelectedEventHandler,
-        escapePressedEventHandler
+        itemSelectedEventHandler
     )
 
     private val upperPane = new Pane()
@@ -79,7 +78,6 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
                             scrollPane.setMinHeight(height)
                         }
                     }
-                    scrollPane.requestFocus()
                 }
             }
         }
@@ -121,19 +119,6 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
                         itemSelectedEventHandler()
                     }
                 }
-            }
-        }
-        scrollPane.hnd(KeyEvent.KEY_PRESSED){e=>
-            if (e.getCode == KeyCode.ENTER) {
-                itemSelectedEventHandler()
-                e.consume()
-            } else if (e.getCode == KeyCode.ESCAPE) {
-                escapePressedEventHandler()
-                e.consume()
-            } else if (e.getCode == KeyCode.DOWN) {
-                down()
-            } else if (e.getCode == KeyCode.UP) {
-                up()
             }
         }
         scrollPane
@@ -216,11 +201,11 @@ object AutocompleteList {
 
     private def apply(textField: TextField, height: Double, stackPane: StackPane, textToComplete: String,
               query: AutocompleteQuery,
-              itemSelectedEventHandler: ()=> Unit, escapePressedEventHandler: ()=> Unit)
+              itemSelectedEventHandler: ()=> Unit)
              (implicit log: Logger, executor : scala.concurrent.ExecutionContext): AutocompleteList = {
         lastCreatedInst.foreach(_.close())
         lastCreatedInst = Some(new AutocompleteList(
-            textField, height, stackPane, imageView, query, itemSelectedEventHandler, escapePressedEventHandler
+            textField, height, stackPane, imageView, query, itemSelectedEventHandler
         ))
         lastCreatedInst.get
     }
@@ -229,7 +214,7 @@ object AutocompleteList {
                         query: AutocompleteQuery, getText: AutocompleteItem => String)
                        (implicit log: Logger, executor : scala.concurrent.ExecutionContext): Unit = {
         var autoCmp: Option[AutocompleteList] = None
-        def onItemSelected: Unit = {
+        def onItemSelected(): Unit = {
             if (autoCmp.isDefined) {
                 textField.setText(getText(autoCmp.get.getSelected.get))
                 RunInJfxThreadForcibly {
@@ -240,21 +225,33 @@ object AutocompleteList {
                 autoCmp = None
             }
         }
-        def onEscape: Unit = {
+        def onEscape(): Unit = {
             if (autoCmp.isDefined) {
                 autoCmp.get.close()
                 autoCmp = None
-                RunInJfxThreadForcibly {
-                    textField.requestFocus()
-                }
             }
         }
         textField.hnd(KeyEvent.KEY_PRESSED){e=>
             if (e.getCode == KeyCode.SPACE && e.isControlDown) {
+                autoCmp.foreach(_.close())
                 autoCmp = Some(AutocompleteList(
-                    textField, height, stackPane, textField.getText, query, () => onItemSelected, () => onEscape
+                    textField, height, stackPane, textField.getText, query, () => onItemSelected()
                 ))
                 e.consume()
+            } else if (autoCmp.isDefined) {
+                if (e.getCode == KeyCode.ESCAPE) {
+                    onEscape()
+                    e.consume()
+                } else if (e.getCode == KeyCode.UP) {
+                    autoCmp.get.up()
+                    e.consume()
+                } else if (e.getCode == KeyCode.DOWN) {
+                    autoCmp.get.down()
+                    e.consume()
+                } else if (e.getCode == KeyCode.ENTER) {
+                    onItemSelected()
+                    e.consume()
+                }
             }
         }
     }
