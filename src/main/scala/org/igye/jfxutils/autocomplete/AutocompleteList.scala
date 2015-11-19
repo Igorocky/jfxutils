@@ -1,19 +1,18 @@
 package org.igye.jfxutils.autocomplete
 
-import javafx.scene.Node
-import javafx.scene.control.{ScrollPane, TextField}
+import javafx.scene.control.TextField
 import javafx.scene.image.{Image, ImageView}
 import javafx.scene.input.{KeyCode, KeyEvent, MouseEvent}
 import javafx.scene.layout._
 import javafx.scene.paint.Color
-import javafx.scene.text.Text
+import javafx.scene.text.{Font, Text}
 
+import com.sun.javafx.tk.Toolkit
 import org.apache.logging.log4j.Logger
 import org.igye.jfxutils.concurrency.{RunInJfxThread, RunInJfxThreadForcibly}
 import org.igye.jfxutils.properties.ChgListener
-import org.igye.jfxutils.{JfxUtils, nodeToHasEvens, observableValueToObservableValueOperators, propertyToPropertyOperators}
+import org.igye.jfxutils.{JfxUtils, nodeToHasEvens, observableValueToObservableValueOperators}
 
-import scala.collection.JavaConversions._
 import scala.concurrent.Future
 
 /*
@@ -22,41 +21,10 @@ import scala.concurrent.Future
     2) it is possible to scroll the horizontal bar to the rightmost position and then navigate through item by up/down keys
     3) when textedit looses focus the autocomplete should close
  */
-private class ResultsPane extends ScrollPane {
-    private val vbox = new VBox()
-    setContent(vbox)
-    this.hnd(MouseEvent.ANY){e => e.consume()}
-    vbox.backgroundProperty() <== backgroundProperty()
-
-    def correctViewPort(y1: Double, y2: Double): Unit = {
-        val H = vbox.getLayoutBounds.getHeight
-        val h = getViewportBounds.getHeight
-        val y = getVvalue*(H - h)
-        val ys = getVvalue*(H - h) + h
-        if (y1 < y) {
-            setVvalue(y1/(H - h))
-        } else if (y2 > ys) {
-            setVvalue((y2 - h)/(H - h))
-        }
-    }
-
-    def addItem(item: Node): Unit = {
-        vbox.getChildren.add(item)
-    }
-
-    def hasFocus = {
-        isFocused || vbox.isFocused ||
-            vbox.getChildren.find{i =>
-                i.isInstanceOf[AutocompleteItem] && i.asInstanceOf[AutocompleteItem].hasFocus ||
-                i.isFocused
-            }.isDefined
-    }
-}
-
 private class AutocompleteList(posX: Double, posY: Double, width: Double, height: Double,
-                       stackPane: StackPane, textToComplete: String,
-                       loadingImage: ImageView, query: AutocompleteQuery,
-                       itemSelectedEventHandler: () => Unit)
+                               stackPane: StackPane, textToComplete: String,
+                               loadingImage: ImageView, query: AutocompleteQuery,
+                               itemSelectedEventHandler: () => Unit)
                               (implicit log: Logger, executor : scala.concurrent.ExecutionContext) {
     private def this(textField: TextField, height: Double, stackPane: StackPane,
                      loadingImage: ImageView, query: AutocompleteQuery,
@@ -221,31 +189,45 @@ private class AutocompleteList(posX: Double, posY: Double, width: Double, height
     def hasFocus = resultsPane != null && resultsPane.hasFocus
 }
 
+case class TextFieldAutocompleteInitParams(
+                                              caretPositionToOpenListAt: Int
+                                              , minWidth: Double
+                                              , maxWidth: Double
+                                              , textToComplete: String
+                                          )
+
+case class ModifyTextFieldWithResultParams(newText: String, placeCaretAt: Int)
+
 object AutocompleteList {
     private val imageView: ImageView = new ImageView(new Image("ajax-loader.gif"))
     private var lastCreatedInst: Option[AutocompleteList] = None
 
-    private def apply(textField: TextField, height: Double, stackPane: StackPane, textToComplete: String,
-              query: AutocompleteQuery,
-              itemSelectedEventHandler: ()=> Unit)
-             (implicit log: Logger, executor : scala.concurrent.ExecutionContext): AutocompleteList = {
+    private def apply(posX: Double, posY: Double, width: Double, height: Double,
+                      stackPane: StackPane, textToComplete: String,
+                      loadingImage: ImageView, query: AutocompleteQuery,
+                      itemSelectedEventHandler: () => Unit)
+                    (implicit log: Logger, executor : scala.concurrent.ExecutionContext): AutocompleteList = {
         lastCreatedInst.foreach(_.close())
         lastCreatedInst = Some(new AutocompleteList(
-            textField, height, stackPane, imageView, query, itemSelectedEventHandler
+            posX, posY, width, height, stackPane, textToComplete, loadingImage, query, itemSelectedEventHandler
         ))
         lastCreatedInst.get
     }
 
-    def addAutocomplete(textField: TextField, height: Double, stackPane: StackPane,
-                        query: AutocompleteQuery, getText: AutocompleteItem => String)
+    def addAutocomplete(textField: TextField, height: Double, stackPane: StackPane, query: AutocompleteQuery,
+                        calcInitParams: (String/*all text*/, Int/*caret position*/) => TextFieldAutocompleteInitParams,
+                        modifyTextFieldWithResultParams: (String/*initial text*/, Int/*initial caret position*/, AutocompleteItem/*selected item*/) => ModifyTextFieldWithResultParams)
                        (implicit log: Logger, executor : scala.concurrent.ExecutionContext): Unit = {
         var autoCmp: Option[AutocompleteList] = None
+        var initCaretPosition = 0
+        var initText = ""
         def onItemSelected(): Unit = {
             if (autoCmp.isDefined) {
-                textField.setText(getText(autoCmp.get.getSelected.get))
+                val resultParams = modifyTextFieldWithResultParams(initText, initCaretPosition, autoCmp.get.getSelected.get)
+                textField.setText(resultParams.newText)
                 RunInJfxThreadForcibly {
                     textField.requestFocus()
-                    textField.positionCaret(textField.getText.length)
+                    textField.positionCaret(resultParams.placeCaretAt)
                 }
                 autoCmp.get.close()
                 autoCmp = None
@@ -260,8 +242,19 @@ object AutocompleteList {
         textField.hnd(KeyEvent.KEY_PRESSED){e=>
             if (e.getCode == KeyCode.SPACE && e.isControlDown) {
                 autoCmp.foreach(_.close())
+                initCaretPosition = textField.getCaretPosition
+                initText = textField.getText
+                val initParams = calcInitParams(initText, initCaretPosition)
                 autoCmp = Some(AutocompleteList(
-                    textField, height, stackPane, textField.getText, query, () => onItemSelected()
+                    posX = textField.localToScene(0, 0).getX + calcXPos(initText, textField.getFont, initParams.caretPositionToOpenListAt),
+                    posY = textField.localToScene(0, textField.getLayoutBounds.getHeight).getY,
+                    width = 300,
+                    height = height,
+                    stackPane = stackPane,
+                    initParams.textToComplete,
+                    loadingImage = imageView,
+                    query = query,
+                    itemSelectedEventHandler = () => onItemSelected()
                 ))
                 e.consume()
             } else if (autoCmp.isDefined) {
@@ -285,5 +278,10 @@ object AutocompleteList {
                 onEscape()
             }
         }
+    }
+
+    private def calcXPos(initText: String, font: Font, caretPosition: Int): Float = {
+        val substr = initText.substring(0, caretPosition)
+        Toolkit.getToolkit().getFontLoader().computeStringWidth(substr, font)
     }
 }
