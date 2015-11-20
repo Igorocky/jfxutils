@@ -195,7 +195,7 @@ object AutocompleteList {
         lastCreatedInst.get
     }
 
-    def addAutocomplete(textField: TextField, height: Double, stackPane: StackPane, query: AutocompleteQuery,
+    def addAutocomplete(textField: TextField, width: Double, maxHeight: Double, stackPane: StackPane, query: AutocompleteQuery,
                         calcInitParams: (String/*all text*/, Int/*caret position*/) => TextFieldAutocompleteInitParams,
                         modifyTextFieldWithResultParams: (String/*initial text*/, Int/*initial caret position*/, AutocompleteItem/*selected item*/) => ModifyTextFieldWithResultParams)
                        (implicit log: Logger, executor : scala.concurrent.ExecutionContext): Unit = {
@@ -227,10 +227,10 @@ object AutocompleteList {
                 initText = textField.getText
                 val initParams = calcInitParams(initText, initCaretPosition)
                 autoCmp = Some(AutocompleteList(
-                    posX = textField.localToScene(0, 0).getX + calcXPos(initText, textField, initParams.caretPositionToOpenListAt),
+                    posX = calcXPos(initText, textField, initParams.caretPositionToOpenListAt, width),
                     posY = textField.localToScene(0, textField.getLayoutBounds.getHeight).getY,
-                    width = 300,
-                    height = height,
+                    width = width,
+                    height = maxHeight,
                     stackPane = stackPane,
                     initParams.textToComplete,
                     loadingImage = imageView,
@@ -261,9 +261,16 @@ object AutocompleteList {
         }
     }
 
-    private def calcXPos(initText: String, textField: TextField, caretPosition: Int): Double = {
+    private def calcXPos(initText: String, textField: TextField, caretPosition: Int, width: Double): Double = {
         val substr = initText.substring(0, caretPosition)
-        Toolkit.getToolkit().getFontLoader().computeStringWidth(substr, textField.getFont) +
+        val requiredXPos = textField.localToScene(0, 0).getX +
+            Toolkit.getToolkit().getFontLoader().computeStringWidth(substr, textField.getFont) +
             textField.getPadding.getLeft
+        val maxPossibleXPos = textField.getScene.getWidth - width
+        if (requiredXPos < maxPossibleXPos) {
+            requiredXPos
+        } else {
+            maxPossibleXPos
+        }
     }
 }
