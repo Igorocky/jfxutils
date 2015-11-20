@@ -6,7 +6,7 @@ import javafx.scene.text.{Font, Text}
 
 import org.igye.jfxutils.JfxUtils
 
-class AutocompleteTextItem(val text: String, font: Font) extends HBox({val t = new Text(text); t.setFont(font); t}) with AutocompleteItem {
+class AutocompleteTextItem(val text: String, font: Font, val userData: Option[Any] = None) extends HBox({val t = new Text(text); t.setFont(font); t}) with AutocompleteItem {
     private val initialBackground = getBackground
     private val initialTextFill = getChildren.get(0).asInstanceOf[Text].getFill
 

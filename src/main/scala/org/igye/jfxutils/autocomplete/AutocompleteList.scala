@@ -22,7 +22,7 @@ import scala.concurrent.Future
     3) when textedit looses focus the autocomplete should close
  */
 private class AutocompleteList(posX: Int, posY: Int, direction: ListDirection, width: Double, maxHeight: Double,
-                               stackPane: StackPane, textToComplete: String,
+                               stackPane: StackPane,
                                loadingImage: ImageView, query: AutocompleteQuery,
                                itemSelectedEventHandler: () => Unit)
                               (implicit log: Logger, executor : scala.concurrent.ExecutionContext) {
@@ -39,7 +39,7 @@ private class AutocompleteList(posX: Int, posY: Int, direction: ListDirection, w
 
     RunInJfxThread {
         stackPane.getChildren.add(upperPane)
-        open(textToComplete)
+        open()
     }
 
     private def showLoadingPane(): Unit = {
@@ -111,8 +111,8 @@ private class AutocompleteList(posX: Int, posY: Int, direction: ListDirection, w
         paneWithResults
     }
 
-    private def open(textToComplete: String): Unit = {
-        query.query(textToComplete, showResults)
+    private def open(): Unit = {
+        query.execute(showResults)
         Future {
             Thread.sleep(300)
             RunInJfxThread {
@@ -172,9 +172,8 @@ private class AutocompleteList(posX: Int, posY: Int, direction: ListDirection, w
 
 case class TextFieldAutocompleteInitParams(
                                               caretPositionToOpenListAt: Int
-                                              , minWidth: Double
-                                              , maxWidth: Double
-                                              , textToComplete: String
+                                              , query: AutocompleteQuery
+                                              , userData: Any
                                           )
 
 case class ModifyTextFieldWithResultParams(newText: String, placeCaretAt: Int)
@@ -184,27 +183,26 @@ object AutocompleteList {
     private var lastCreatedInst: Option[AutocompleteList] = None
 
     private def apply(posX: Double, posY: Double, direction: ListDirection, width: Double, height: Double,
-                      stackPane: StackPane, textToComplete: String,
+                      stackPane: StackPane,
                       loadingImage: ImageView, query: AutocompleteQuery,
                       itemSelectedEventHandler: () => Unit)
                     (implicit log: Logger, executor : scala.concurrent.ExecutionContext): AutocompleteList = {
         lastCreatedInst.foreach(_.close())
         lastCreatedInst = Some(new AutocompleteList(
-            posX.toInt, posY.toInt, direction, width, height, stackPane, textToComplete, loadingImage, query, itemSelectedEventHandler
+            posX.toInt, posY.toInt, direction, width, height, stackPane, loadingImage, query, itemSelectedEventHandler
         ))
         lastCreatedInst.get
     }
 
-    def addAutocomplete(textField: TextField, width: Double, minHeight: Double, prefHeight: Double, stackPane: StackPane, query: AutocompleteQuery,
+    def addAutocomplete(textField: TextField, width: Double, minHeight: Double, prefHeight: Double, stackPane: StackPane,
                         calcInitParams: (String/*all text*/, Int/*caret position*/) => TextFieldAutocompleteInitParams,
-                        modifyTextFieldWithResultParams: (String/*initial text*/, Int/*initial caret position*/, AutocompleteItem/*selected item*/) => ModifyTextFieldWithResultParams)
+                        modifyTextFieldWithResultParams: (Any/*userData*/, AutocompleteItem/*selected item*/) => ModifyTextFieldWithResultParams)
                        (implicit log: Logger, executor : scala.concurrent.ExecutionContext): Unit = {
         var autoCmp: Option[AutocompleteList] = None
-        var initCaretPosition = 0
-        var initText = ""
+        var userData: Any = null
         def onItemSelected(): Unit = {
             if (autoCmp.isDefined) {
-                val resultParams = modifyTextFieldWithResultParams(initText, initCaretPosition, autoCmp.get.getSelected.get)
+                val resultParams = modifyTextFieldWithResultParams(userData, autoCmp.get.getSelected.get)
                 textField.setText(resultParams.newText)
                 RunInJfxThreadForcibly {
                     textField.requestFocus()
@@ -223,23 +221,22 @@ object AutocompleteList {
         textField.hnd(KeyEvent.KEY_PRESSED){e=>
             if (e.getCode == KeyCode.SPACE && e.isControlDown) {
                 autoCmp.foreach(_.close())
-                initCaretPosition = textField.getCaretPosition
-                initText = textField.getText
+                var initText = textField.getText
                 if (initText == null) {
                     initText = ""
                 }
-                val initParams = calcInitParams(initText, initCaretPosition)
-                val (direction, posY) = calcDirectionAndYPos(textField, minHeight, prefHeight)
+                val initParams = calcInitParams(initText, textField.getCaretPosition)
+                userData = initParams.userData
+                val (direction, posY, height) = calcDirectionYposAndHeight(textField, minHeight, prefHeight)
                 autoCmp = Some(AutocompleteList(
                     posX = calcXPos(initText, textField, initParams.caretPositionToOpenListAt, width),
                     posY = posY,
                     direction = direction,
                     width = width,
-                    height = prefHeight,
+                    height = height,
                     stackPane = stackPane,
-                    initParams.textToComplete,
                     loadingImage = imageView,
-                    query = query,
+                    query = initParams.query,
                     itemSelectedEventHandler = () => onItemSelected()
                 ))
                 e.consume()
@@ -279,21 +276,21 @@ object AutocompleteList {
         }
     }
 
-    private def calcDirectionAndYPos(textField: TextField, minHeight: Double, prefHeight: Double): (ListDirection, Double) = {
+    private def calcDirectionYposAndHeight(textField: TextField, minHeight: Double, prefHeight: Double) = {
         val lowerY = textField.localToScene(0, textField.getLayoutBounds.getHeight).getY
-        val downHeight = textField.getScene.getHeight - lowerY
-        if (prefHeight <= downHeight) {
-            (ListDirection.DOWN, lowerY)
+        val lowerHeight = textField.getScene.getHeight - lowerY
+        if (prefHeight <= lowerHeight) {
+            (ListDirection.DOWN, lowerY, prefHeight)
         } else {
             val upperY = textField.localToScene(0, 0).getY
-            val upHeight = upperY
-            if (prefHeight <= upHeight) {
-                (ListDirection.UP, upperY)
+            val upperHeight = upperY
+            if (prefHeight <= upperHeight) {
+                (ListDirection.UP, upperY, prefHeight)
             } else {
-                if (downHeight >= upHeight) {
-                    (ListDirection.DOWN, if (downHeight > minHeight) lowerY else minHeight)
+                if (lowerHeight >= upperHeight) {
+                    (ListDirection.DOWN, lowerY, if (lowerHeight > minHeight) lowerHeight else minHeight)
                 } else {
-                    (ListDirection.UP, if (upHeight > minHeight) upperY else minHeight)
+                    (ListDirection.UP, upperY, if (upperHeight > minHeight) upperHeight else minHeight)
                 }
             }
         }
