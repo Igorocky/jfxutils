@@ -2,11 +2,11 @@ package org.igye.jfxutils.autocomplete
 
 import javafx.scene.layout.HBox
 import javafx.scene.paint.Color
-import javafx.scene.text.Text
+import javafx.scene.text.{Font, Text}
 
 import org.igye.jfxutils.JfxUtils
 
-class AutocompleteTextItem(val text: String) extends HBox(new Text(text)) with AutocompleteItem {
+class AutocompleteTextItem(val text: String, font: Font) extends HBox({val t = new Text(text); t.setFont(font); t}) with AutocompleteItem {
     private val initialBackground = getBackground
     private val initialTextFill = getChildren.get(0).asInstanceOf[Text].getFill
 
