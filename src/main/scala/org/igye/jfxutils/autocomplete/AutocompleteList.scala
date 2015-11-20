@@ -1,17 +1,17 @@
 package org.igye.jfxutils.autocomplete
 
+import java.lang
 import javafx.scene.control.TextField
 import javafx.scene.image.{Image, ImageView}
 import javafx.scene.input.{KeyCode, KeyEvent, MouseEvent}
 import javafx.scene.layout._
-import javafx.scene.paint.Color
 import javafx.scene.text.Text
 
 import com.sun.javafx.tk.Toolkit
 import org.apache.logging.log4j.Logger
 import org.igye.jfxutils.concurrency.{RunInJfxThread, RunInJfxThreadForcibly}
-import org.igye.jfxutils.properties.ChgListener
-import org.igye.jfxutils.{JfxUtils, nodeToHasEvens, observableValueToObservableValueOperators}
+import org.igye.jfxutils.properties.{ChgListener, Expr}
+import org.igye.jfxutils.{nodeToHasEvens, observableValueToObservableValueOperators, propertyToPropertyOperators}
 
 import scala.concurrent.Future
 
@@ -21,7 +21,7 @@ import scala.concurrent.Future
     2) it is possible to scroll the horizontal bar to the rightmost position and then navigate through item by up/down keys
     3) when textedit looses focus the autocomplete should close
  */
-private class AutocompleteList(posX: Int, posY: Int, width: Double, height: Double,
+private class AutocompleteList(posX: Int, posY: Int, direction: ListDirection, width: Double, maxHeight: Double,
                                stackPane: StackPane, textToComplete: String,
                                loadingImage: ImageView, query: AutocompleteQuery,
                                itemSelectedEventHandler: () => Unit)
@@ -58,30 +58,26 @@ private class AutocompleteList(posX: Int, posY: Int, width: Double, height: Doub
                 upperPane.getChildren.clear()
                 resultsPane = createPaneWithResults(list)
                 upperPane.getChildren.add(resultsPane)
-                RunInJfxThreadForcibly {
-                    if (queryResult.isDefined) {
-                        var scrollPanePrefHeight = 0.0
-                        queryResult.get.foreach(scrollPanePrefHeight += _.getLayoutBounds.getHeight)
-                        scrollPanePrefHeight += 25
-                        if (scrollPanePrefHeight < height) {
-                            resultsPane.setMinHeight(scrollPanePrefHeight)
-                        } else {
-                            resultsPane.setMinHeight(height)
-                        }
-                    }
+                Future {
+                    Thread.sleep(50)
+                    resultsPane.correctHeight()
                 }
             }
         }
     }
 
+    /*
+        This method should only position a pane. It is responsibility of the pane to calculate its sizes and looks.
+     */
     private def prepareDropDownPane(pane: Region): Unit = {
-        pane.setBorder(JfxUtils.createBorder(Color.GRAY))
-        pane.setBackground(JfxUtils.createBackground(Color.WHITE))
         pane.setLayoutX(posX)
-        pane.setLayoutY(posY)
-        pane.setMinWidth(width)
-        pane.setMaxWidth(width)
-        pane.setMaxHeight(height)
+        if (direction == ListDirection.UP) {
+            pane.layoutYProperty() <== Expr(pane.heightProperty()){
+                new lang.Double(posY - pane.heightProperty().get()).asInstanceOf[Number]
+            }
+        } else {
+            pane.setLayoutY(posY)
+        }
     }
 
     private def createLoadingPane() = {
@@ -92,7 +88,7 @@ private class AutocompleteList(posX: Int, posY: Int, width: Double, height: Doub
     }
 
     private def createPaneWithResults(list: List[AutocompleteItem]) = {
-        val paneWithResults = new ResultsPane
+        val paneWithResults = new ResultsPane(width, maxHeight)
         prepareDropDownPane(paneWithResults)
         if (list.isEmpty) {
             paneWithResults.addItem(new Text("Nothing found"))
@@ -194,7 +190,7 @@ object AutocompleteList {
                     (implicit log: Logger, executor : scala.concurrent.ExecutionContext): AutocompleteList = {
         lastCreatedInst.foreach(_.close())
         lastCreatedInst = Some(new AutocompleteList(
-            posX.toInt, posY.toInt, width, height, stackPane, textToComplete, loadingImage, query, itemSelectedEventHandler
+            posX.toInt, posY.toInt, ListDirection.DOWN, width, height, stackPane, textToComplete, loadingImage, query, itemSelectedEventHandler
         ))
         lastCreatedInst.get
     }
