@@ -5,7 +5,7 @@ import javafx.scene.image.{Image, ImageView}
 import javafx.scene.input.{KeyCode, KeyEvent, MouseEvent}
 import javafx.scene.layout._
 import javafx.scene.paint.Color
-import javafx.scene.text.{Font, Text}
+import javafx.scene.text.Text
 
 import com.sun.javafx.tk.Toolkit
 import org.apache.logging.log4j.Logger
@@ -21,26 +21,11 @@ import scala.concurrent.Future
     2) it is possible to scroll the horizontal bar to the rightmost position and then navigate through item by up/down keys
     3) when textedit looses focus the autocomplete should close
  */
-private class AutocompleteList(posX: Double, posY: Double, width: Double, height: Double,
+private class AutocompleteList(posX: Int, posY: Int, width: Double, height: Double,
                                stackPane: StackPane, textToComplete: String,
                                loadingImage: ImageView, query: AutocompleteQuery,
                                itemSelectedEventHandler: () => Unit)
                               (implicit log: Logger, executor : scala.concurrent.ExecutionContext) {
-    private def this(textField: TextField, height: Double, stackPane: StackPane,
-                     loadingImage: ImageView, query: AutocompleteQuery,
-                     itemSelectedEventHandler: ()=> Unit)
-                    (implicit log: Logger, executor : scala.concurrent.ExecutionContext) = this(
-        textField.localToScene(0, 0).getX,
-        textField.localToScene(0, textField.getLayoutBounds.getHeight).getY,
-        textField.getLayoutBounds.getWidth,
-        height,
-        stackPane,
-        textField.getText,
-        loadingImage,
-        query,
-        itemSelectedEventHandler
-    )
-
     private val upperPane = new Pane()
     upperPane.hnd(MouseEvent.MOUSE_CLICKED){e=>close()}
     @volatile
@@ -209,7 +194,7 @@ object AutocompleteList {
                     (implicit log: Logger, executor : scala.concurrent.ExecutionContext): AutocompleteList = {
         lastCreatedInst.foreach(_.close())
         lastCreatedInst = Some(new AutocompleteList(
-            posX, posY, width, height, stackPane, textToComplete, loadingImage, query, itemSelectedEventHandler
+            posX.toInt, posY.toInt, width, height, stackPane, textToComplete, loadingImage, query, itemSelectedEventHandler
         ))
         lastCreatedInst.get
     }
@@ -246,7 +231,7 @@ object AutocompleteList {
                 initText = textField.getText
                 val initParams = calcInitParams(initText, initCaretPosition)
                 autoCmp = Some(AutocompleteList(
-                    posX = textField.localToScene(0, 0).getX + calcXPos(initText, textField.getFont, initParams.caretPositionToOpenListAt),
+                    posX = textField.localToScene(0, 0).getX + calcXPos(initText, textField, initParams.caretPositionToOpenListAt),
                     posY = textField.localToScene(0, textField.getLayoutBounds.getHeight).getY,
                     width = 300,
                     height = height,
@@ -280,8 +265,9 @@ object AutocompleteList {
         }
     }
 
-    private def calcXPos(initText: String, font: Font, caretPosition: Int): Float = {
+    private def calcXPos(initText: String, textField: TextField, caretPosition: Int): Double = {
         val substr = initText.substring(0, caretPosition)
-        Toolkit.getToolkit().getFontLoader().computeStringWidth(substr, font)
+        Toolkit.getToolkit().getFontLoader().computeStringWidth(substr, textField.getFont) +
+            textField.getPadding.getLeft
     }
 }
