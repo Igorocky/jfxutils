@@ -66,9 +66,6 @@ private class AutocompleteList(posX: Int, posY: Int, direction: ListDirection, w
         }
     }
 
-    /*
-        This method should only position a pane. It is responsibility of the pane to calculate its sizes and looks.
-     */
     private def prepareDropDownPane(pane: Region): Unit = {
         pane.setLayoutX(posX)
         if (direction == ListDirection.UP) {
@@ -105,6 +102,17 @@ private class AutocompleteList(posX: Int, posY: Int, direction: ListDirection, w
                     if (e.getClickCount == 2) {
                         itemSelectedEventHandler()
                     }
+                }
+            }
+            paneWithResults.hnd(KeyEvent.KEY_PRESSED){e=>
+                if (e.getCode == KeyCode.ESCAPE) {
+                    close()
+                } else if (e.getCode == KeyCode.UP) {
+                    up()
+                } else if (e.getCode == KeyCode.DOWN) {
+                    down()
+                } else if (e.getCode == KeyCode.ENTER) {
+                    itemSelectedEventHandler()
                 }
             }
         }
