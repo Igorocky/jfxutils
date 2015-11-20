@@ -225,6 +225,9 @@ object AutocompleteList {
                 autoCmp.foreach(_.close())
                 initCaretPosition = textField.getCaretPosition
                 initText = textField.getText
+                if (initText == null) {
+                    initText = ""
+                }
                 val initParams = calcInitParams(initText, initCaretPosition)
                 val (direction, posY) = calcDirectionAndYPos(textField, minHeight, prefHeight)
                 autoCmp = Some(AutocompleteList(
