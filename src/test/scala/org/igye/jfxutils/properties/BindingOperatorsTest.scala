@@ -10,19 +10,16 @@ import org.junit.{Assert, Test}
 class BindingOperatorsTest {
     @Test
     def testUnidirectionalBinding(): Unit = {
-        val target1 = new SimpleIntegerProperty(0)
-        val target2 = new SimpleIntegerProperty(0)
+        val target = new SimpleIntegerProperty(0)
         val source = new SimpleIntegerProperty(1)
 
-        target1 <== target2 <== source
+        target <== source
 
-        Assert.assertEquals(1, target1.get())
-        Assert.assertEquals(1, target2.get())
+        Assert.assertEquals(1, target.get())
         Assert.assertEquals(1, source.get())
 
         source.setValue(2)
-        Assert.assertEquals(2, target1.get())
-        Assert.assertEquals(2, target2.get())
+        Assert.assertEquals(2, target.get())
         Assert.assertEquals(2, source.get())
     }
 
@@ -91,31 +88,25 @@ class BindingOperatorsTest {
         val strProp = new SimpleStringProperty("A")
         val strProp2 = new SimpleStringProperty("Z")
 
-        val targetStrProp1 = new SimpleStringProperty()
-        val targetStrProp2 = new SimpleStringProperty()
+        val targetStrProp = new SimpleStringProperty()
 
-        targetStrProp1 <== targetStrProp2 <== Expr(intProp, boolProp, strProp){
+        targetStrProp <== Expr(intProp, boolProp, strProp){
             s"${intProp.get}:${boolProp.get}:${strProp.get}:${strProp2.get}"
         }
 
-        Assert.assertEquals("1:false:A:Z", targetStrProp1.get())
-        Assert.assertEquals("1:false:A:Z", targetStrProp2.get())
+        Assert.assertEquals("1:false:A:Z", targetStrProp.get())
 
         intProp.set(2)
-        Assert.assertEquals("2:false:A:Z", targetStrProp1.get())
-        Assert.assertEquals("2:false:A:Z", targetStrProp2.get())
+        Assert.assertEquals("2:false:A:Z", targetStrProp.get())
 
         boolProp.set(true)
-        Assert.assertEquals("2:true:A:Z", targetStrProp1.get())
-        Assert.assertEquals("2:true:A:Z", targetStrProp2.get())
+        Assert.assertEquals("2:true:A:Z", targetStrProp.get())
 
         strProp.set("B")
-        Assert.assertEquals("2:true:B:Z", targetStrProp1.get())
-        Assert.assertEquals("2:true:B:Z", targetStrProp2.get())
+        Assert.assertEquals("2:true:B:Z", targetStrProp.get())
 
         strProp2.set("X")
-        Assert.assertEquals("2:true:B:Z", targetStrProp1.get())
-        Assert.assertEquals("2:true:B:Z", targetStrProp2.get())
+        Assert.assertEquals("2:true:B:Z", targetStrProp.get())
     }
 
     @Test

@@ -52,7 +52,7 @@ private class ResultsPane(width: Double, maxHeight: Double)(implicit log: Logger
 
     def correctHeight(): Unit = {
         RunInJfxThread {
-            minHeightProperty() <== prefHeightProperty() <== maxHeightProperty() <== Expr[Number](vbox.layoutBoundsProperty()) {
+            prefHeightProperty() <== Expr(vbox.layoutBoundsProperty()) {
                 val height = if (vbox.layoutBoundsProperty().get().getHeight <= maxHeight) {
                     vbox.layoutBoundsProperty().get().getHeight
                 } else {
@@ -60,6 +60,8 @@ private class ResultsPane(width: Double, maxHeight: Double)(implicit log: Logger
                 }
                 height + 2
             }
+            minHeightProperty() <== prefHeightProperty()
+            maxHeightProperty() <== prefHeightProperty()
         }
     }
 
