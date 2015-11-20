@@ -10,8 +10,9 @@ import javafx.scene.text.Text
 import com.sun.javafx.tk.Toolkit
 import org.apache.logging.log4j.Logger
 import org.igye.jfxutils.concurrency.{RunInJfxThread, RunInJfxThreadForcibly}
+import org.igye.jfxutils.exceptions.JfxUtilsException
 import org.igye.jfxutils.properties.{ChgListener, Expr}
-import org.igye.jfxutils.{nodeToHasEvens, observableValueToObservableValueOperators, propertyToPropertyOperators}
+import org.igye.jfxutils.{JfxUtils, nodeToHasEvens, observableValueToObservableValueOperators, propertyToPropertyOperators}
 
 import scala.concurrent.Future
 
@@ -209,7 +210,7 @@ object AutocompleteList {
         lastCreatedInst.get
     }
 
-    def addAutocomplete(textField: TextField, width: Double, minHeight: Double, prefHeight: Double, stackPane: StackPane,
+    def addAutocomplete(textField: TextField, width: Double, maxHeight: Double,
                         calcInitParams: (String/*all text*/, Int/*caret position*/) => TextFieldAutocompleteInitParams,
                         modifyTextFieldWithResultParams: (Any/*userData*/, AutocompleteItem/*selected item*/) => ModifyTextFieldWithResultParams)
                        (implicit log: Logger, executor : scala.concurrent.ExecutionContext): Unit = {
@@ -242,14 +243,15 @@ object AutocompleteList {
                 }
                 val initParams = calcInitParams(initText, textField.getCaretPosition)
                 userData = initParams.userData
-                val (direction, posY, height) = calcDirectionYposAndHeight(textField, minHeight, prefHeight)
+                val (direction, posY, height) = calcDirectionYposAndHeight(textField, maxHeight)
                 autoCmp = Some(AutocompleteList(
                     posX = calcXPos(initText, textField, initParams.caretPositionToOpenListAt, width),
                     posY = posY,
                     direction = direction,
                     width = width,
                     height = height,
-                    stackPane = stackPane,
+                    stackPane = JfxUtils.findParent[StackPane](textField)
+                        .getOrElse(throw new JfxUtilsException("The TextField should be contained in a StackPane.")),
                     loadingImage = imageView,
                     query = initParams.query,
                     itemSelectedEventHandler = () => onItemSelected()
@@ -291,21 +293,21 @@ object AutocompleteList {
         }
     }
 
-    private def calcDirectionYposAndHeight(textField: TextField, minHeight: Double, prefHeight: Double) = {
+    private def calcDirectionYposAndHeight(textField: TextField, maxHeight: Double) = {
         val lowerY = textField.localToScene(0, textField.getLayoutBounds.getHeight).getY
         val lowerHeight = textField.getScene.getHeight - lowerY
-        if (prefHeight <= lowerHeight) {
-            (ListDirection.DOWN, lowerY, prefHeight)
+        if (maxHeight <= lowerHeight) {
+            (ListDirection.DOWN, lowerY, maxHeight)
         } else {
             val upperY = textField.localToScene(0, 0).getY
             val upperHeight = upperY
-            if (prefHeight <= upperHeight) {
-                (ListDirection.UP, upperY, prefHeight)
+            if (maxHeight <= upperHeight) {
+                (ListDirection.UP, upperY, maxHeight)
             } else {
                 if (lowerHeight >= upperHeight) {
-                    (ListDirection.DOWN, lowerY, if (lowerHeight > minHeight) lowerHeight else minHeight)
+                    (ListDirection.DOWN, lowerY, lowerHeight)
                 } else {
-                    (ListDirection.UP, upperY, if (upperHeight > minHeight) upperHeight else minHeight)
+                    (ListDirection.UP, upperY, upperHeight)
                 }
             }
         }

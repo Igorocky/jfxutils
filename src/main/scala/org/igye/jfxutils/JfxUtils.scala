@@ -56,7 +56,7 @@ object JfxUtils {
     def bindShortcutActionTrigger(tab: Tab, actionsList: List[Action]): Unit = {
         val filtersShortcutActionTrigger = new ShortcutActionTrigger(actionsList.filter(_.actionType == FILTER))
         val flt = Hnd(KeyEvent.ANY){ e =>
-            findParent[TabPane](e.getTarget).foreach {tabPane =>
+            findParent[TabPane](e.getTarget.asInstanceOf[Node]).foreach {tabPane =>
                 if (tabPane.getSelectionModel.getSelectedItem == tab) {
                     filtersShortcutActionTrigger.triggerActionIfNecessary(e)
                 }
@@ -64,7 +64,7 @@ object JfxUtils {
         }
         val handlersShortcutActionTrigger = new ShortcutActionTrigger(actionsList.filter(_.actionType == HANDLER))
         val hnd = Hnd(KeyEvent.ANY){ e =>
-            findParent[TabPane](e.getTarget).foreach {tabPane =>
+            findParent[TabPane](e.getTarget.asInstanceOf[Node]).foreach {tabPane =>
                 if (tabPane.getSelectionModel.getSelectedItem == tab) {
                     handlersShortcutActionTrigger.triggerActionIfNecessary(e)
                 }
@@ -86,15 +86,13 @@ object JfxUtils {
         }
     }
 
-    def findParent[T: ClassTag](eventTarget: EventTarget): Option[T] = {
-        if (eventTarget == null) {
+    def findParent[T: ClassTag](node: Node): Option[T] = {
+        if (node == null) {
             None
-        } else if (eventTarget.getClass.isAssignableFrom(implicitly[ClassTag[T]].runtimeClass)) {
-            Some(eventTarget.asInstanceOf[T])
-        } else if (eventTarget.isInstanceOf[Node]) {
-            findParent(eventTarget.asInstanceOf[Node].getParent)
+        } else if (node.getClass.isAssignableFrom(implicitly[ClassTag[T]].runtimeClass)) {
+            Some(node.asInstanceOf[T])
         } else {
-            None
+            findParent(node.asInstanceOf[Node].getParent)
         }
     }
 }
