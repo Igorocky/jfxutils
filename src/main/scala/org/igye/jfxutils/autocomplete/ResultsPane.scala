@@ -24,16 +24,30 @@ private class ResultsPane(width: Double, maxHeight: Double)(implicit log: Logger
     vbox.setBackground(JfxUtils.createBackground(Color.WHITE))
     vbox.setMinWidth(width - 2)
 
-    def correctViewPort(y1: Double, y2: Double): Unit = {
+    def correctViewport(y1: Double, y2: Double): Unit = {
         val H = vbox.getLayoutBounds.getHeight
         val h = getViewportBounds.getHeight
         val y = getVvalue*(H - h)
-        val ys = getVvalue*(H - h) + h
+        val ys = y + h
         if (y1 < y) {
             setVvalue(y1/(H - h))
         } else if (y2 > ys) {
             setVvalue((y2 - h)/(H - h))
         }
+    }
+
+    def correctViewportM(y1: Double, y2: Double): Unit = {
+        val ym = (y1 + y2)/2
+        val H = vbox.getLayoutBounds.getHeight
+        val h = getViewportBounds.getHeight
+        var vv = (ym - h/2)/(H - h)
+        if (vv < getVmin) {
+            vv = getVmin
+        }
+        if (vv > getVmax) {
+            vv = getVmax
+        }
+        setVvalue(vv)
     }
 
     def correctHeight(): Unit = {

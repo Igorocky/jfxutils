@@ -139,7 +139,7 @@ private class AutocompleteList(posX: Int, posY: Int, direction: ListDirection, w
                 }
                 val item = queryResult.get(selectedIdx)
                 item.select()
-                resultsPane.correctViewPort(item.getLayoutY, item.getLayoutY + item.getLayoutBounds.getHeight)
+                correctViewport()
             }
         }
     }
@@ -154,8 +154,15 @@ private class AutocompleteList(posX: Int, posY: Int, direction: ListDirection, w
                 }
                 val item = queryResult.get(selectedIdx)
                 item.select()
-                resultsPane.correctViewPort(item.getLayoutY, item.getLayoutY + item.getLayoutBounds.getHeight)
+                correctViewport()
             }
+        }
+    }
+
+    private def correctViewport(): Unit = {
+        if (queryResult.isDefined) {
+            val selectedItem = queryResult.get(selectedIdx)
+            resultsPane.correctViewportM(selectedItem.getLayoutY, selectedItem.getLayoutY + selectedItem.getLayoutBounds.getHeight)
         }
     }
 
