@@ -8,12 +8,11 @@ import javafx.scene.paint.Color
 
 import org.apache.logging.log4j.Logger
 import org.igye.jfxutils._
-import org.igye.jfxutils.concurrency.RunInJfxThreadForcibly
 import org.igye.jfxutils.properties.Expr
 
 import scala.collection.JavaConversions._
 
-private class ResultsPane(width: Double, maxHeight: Double)(implicit log: Logger) extends ScrollPane with LayoutAutoRequestable {
+private class ResultsPane(width: Double, maxHeight: Double)(implicit log: Logger) extends ScrollPane {
     this.hnd(MouseEvent.ANY){e => e.consume()}//for the upper pane not to close the list
     setPrefWidth(width) //fix width
     setMinWidth(getPrefWidth)
@@ -31,7 +30,7 @@ private class ResultsPane(width: Double, maxHeight: Double)(implicit log: Logger
         }
         height + 2
     }
-    requestLayoutOnChangeOf(prefHeightProperty())
+    this.requestLayoutOnChangeOf(prefHeightProperty())
     minHeightProperty() <== prefHeightProperty()
     maxHeightProperty() <== prefHeightProperty()
 

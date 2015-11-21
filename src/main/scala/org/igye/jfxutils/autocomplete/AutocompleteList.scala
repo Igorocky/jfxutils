@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger
 import org.igye.jfxutils.concurrency.{RunInJfxThread, RunInJfxThreadForcibly}
 import org.igye.jfxutils.exceptions.JfxUtilsException
 import org.igye.jfxutils.properties.{ChgListener, Expr}
-import org.igye.jfxutils.{JfxUtils, nodeToHasEvens, observableValueToObservableValueOperators, propertyToPropertyOperators}
+import org.igye.jfxutils.{JfxUtils, nodeToNodeOps, observableValueToObservableValueOperators, propertyToPropertyOperators}
 
 import scala.concurrent.Future
 
