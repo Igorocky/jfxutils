@@ -59,10 +59,6 @@ private class AutocompleteList(posX: Int, posY: Int, direction: ListDirection, w
                 upperPane.getChildren.clear()
                 resultsPane = createPaneWithResults(list)
                 upperPane.getChildren.add(resultsPane)
-                Future {
-                    Thread.sleep(50)
-                    resultsPane.correctHeight()
-                }
             }
         }
     }

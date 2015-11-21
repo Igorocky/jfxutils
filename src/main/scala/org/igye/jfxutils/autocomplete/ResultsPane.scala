@@ -1,6 +1,5 @@
 package org.igye.jfxutils.autocomplete
 
-import java.lang
 import javafx.scene.Node
 import javafx.scene.control.ScrollPane
 import javafx.scene.input.MouseEvent
@@ -8,13 +7,13 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 
 import org.apache.logging.log4j.Logger
-import org.igye.jfxutils.concurrency.RunInJfxThread
+import org.igye.jfxutils._
+import org.igye.jfxutils.concurrency.RunInJfxThreadForcibly
 import org.igye.jfxutils.properties.Expr
-import org.igye.jfxutils.{JfxUtils, nodeToHasEvens, propertyToPropertyOperators}
 
 import scala.collection.JavaConversions._
 
-private class ResultsPane(width: Double, maxHeight: Double)(implicit log: Logger) extends ScrollPane {
+private class ResultsPane(width: Double, maxHeight: Double)(implicit log: Logger) extends ScrollPane with LayoutAutoRequestable {
     this.hnd(MouseEvent.ANY){e => e.consume()}//for the upper pane not to close the list
     setPrefWidth(width) //fix width
     setMinWidth(getPrefWidth)
@@ -23,6 +22,18 @@ private class ResultsPane(width: Double, maxHeight: Double)(implicit log: Logger
     setContent(vbox)
     vbox.setBackground(JfxUtils.createBackground(Color.WHITE))
     vbox.setMinWidth(width - 2)
+
+    prefHeightProperty() <== Expr(vbox.heightProperty()) {
+        val height = if (vbox.heightProperty().get() <= maxHeight) {
+            vbox.heightProperty().get()
+        } else {
+            maxHeight
+        }
+        height + 2
+    }
+    requestLayoutOnChangeOf(prefHeightProperty())
+    minHeightProperty() <== prefHeightProperty()
+    maxHeightProperty() <== prefHeightProperty()
 
     def correctViewport(y1: Double, y2: Double): Unit = {
         val H = vbox.getLayoutBounds.getHeight
@@ -48,21 +59,6 @@ private class ResultsPane(width: Double, maxHeight: Double)(implicit log: Logger
             vv = getVmax
         }
         setVvalue(vv)
-    }
-
-    def correctHeight(): Unit = {
-        RunInJfxThread {
-            prefHeightProperty() <== Expr(vbox.layoutBoundsProperty()) {
-                val height = if (vbox.layoutBoundsProperty().get().getHeight <= maxHeight) {
-                    vbox.layoutBoundsProperty().get().getHeight
-                } else {
-                    maxHeight
-                }
-                height + 2
-            }
-            minHeightProperty() <== prefHeightProperty()
-            maxHeightProperty() <== prefHeightProperty()
-        }
     }
 
     def addItem(item: Node): Unit = {
