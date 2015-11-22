@@ -4,11 +4,18 @@ import java.io.File
 import javafx.scene.control.TextField
 
 import org.apache.logging.log4j.Logger
-import org.igye.commonutils.GeneralCaseInsensitiveStringFilter
+import org.igye.commonutils.{Enum, GeneralCaseInsensitiveStringFilter}
 import org.igye.jfxutils.autocomplete._
 
+case class FileChooserType(name: String)
+object FileChooserType extends Enum[FileChooserType] {
+    val DIRS_AND_FILES = addElem(FileChooserType("DIRS_AND_FILES"))
+    val DIRS_ONLY = addElem(FileChooserType("DIRS_ONLY"))
+}
+
 object TextFieldFileChooser {
-    def apply(textField: TextField, width: Double, maxHeight: Double)
+    def apply(textField: TextField, width: Double, maxHeight: Double,
+              fileChooserType: FileChooserType)
              (implicit log: Logger, executor : scala.concurrent.ExecutionContext): Unit = {
         val font = textField.getFont
         AutocompleteList.addAutocomplete(
@@ -30,7 +37,10 @@ object TextFieldFileChooser {
                             val path = new File(pathAndFilter.path)
                             if (path.exists()) {
                                 path.listFiles()
-                                    .filter(f => filter.matches(f.getName))
+                                    .filter(f =>
+                                        (if (fileChooserType == FileChooserType.DIRS_ONLY) f.isDirectory else true)
+                                            && filter.matches(f.getName)
+                                    )
                                     .sortWith((f1, f2) =>
                                         f1.isDirectory && !f2.isDirectory
                                             || (
