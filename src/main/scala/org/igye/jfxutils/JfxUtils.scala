@@ -11,7 +11,7 @@ import javafx.scene.shape.{StrokeLineCap, StrokeLineJoin, StrokeType}
 import org.apache.logging.log4j.Logger
 import org.igye.jfxutils.action.ActionType.{FILTER, HANDLER}
 import org.igye.jfxutils.action.{Action, ShortcutActionTrigger}
-import org.igye.jfxutils.dialog.{FileChooserType, TextFieldFileChooser}
+import org.igye.jfxutils.dialog.{TextFieldVarNameAutocomplete, FileChooserType, TextFieldFileChooser}
 import org.igye.jfxutils.events.Hnd
 import org.igye.jfxutils.properties.ChgListener
 
@@ -101,5 +101,11 @@ object JfxUtils {
                         fileChooserType: FileChooserType = FileChooserType.DIRS_AND_FILES)
                        (implicit log: Logger, executor : scala.concurrent.ExecutionContext): Unit = {
         TextFieldFileChooser(textField, width, maxHeight, fileChooserType)
+    }
+
+    def bindVarNameAutocomplete(textField: TextField, width: Double, maxHeight: Double,
+                        varNameProvider: => List[String])
+                       (implicit log: Logger, executor : scala.concurrent.ExecutionContext): Unit = {
+        TextFieldVarNameAutocomplete(textField, width, maxHeight, varNameProvider)
     }
 }

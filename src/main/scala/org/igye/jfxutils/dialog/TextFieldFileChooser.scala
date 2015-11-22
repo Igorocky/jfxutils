@@ -58,8 +58,8 @@ object TextFieldFileChooser {
                 )
             },
             modifyTextFieldWithResultParams = (userData, item) => {
-                val path = if (userData.asInstanceOf[PathAndFilter].path != null) userData.asInstanceOf[PathAndFilter].path else ""
-                val filter = if (userData.asInstanceOf[PathAndFilter].filter != null) userData.asInstanceOf[PathAndFilter].filter else ""
+                val path = userData.asInstanceOf[PathAndFilter].path
+                val filter = userData.asInstanceOf[PathAndFilter].filter
                 if (item.asInstanceOf[AutocompleteTextItem].userData.exists(!_.asInstanceOf[Boolean])) {
                     val newFullPath = path + filter
                     ModifyTextFieldWithResultParams(newFullPath, newFullPath.length)
