@@ -4,7 +4,7 @@ import java.util
 import javafx.beans.property.{SimpleBooleanProperty, SimpleIntegerProperty, SimpleStringProperty}
 import javafx.collections.FXCollections
 
-import org.igye.jfxutils.{listToListOperators, observableValueToObservableValueOperators, propertyToPropertyOperators}
+import org.igye.jfxutils.Implicits.{observableValueToObservableValueOperators, listToListOperators, propertyToPropertyOperators}
 import org.junit.{Assert, Test}
 
 class BindingOperatorsTest {

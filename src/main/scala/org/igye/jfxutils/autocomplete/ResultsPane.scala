@@ -7,6 +7,7 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 
 import org.apache.logging.log4j.Logger
+import org.igye.jfxutils.Implicits.{parentToParentOps, propertyToPropertyOperators, nodeToNodeOps}
 import org.igye.jfxutils._
 import org.igye.jfxutils.properties.Expr
 

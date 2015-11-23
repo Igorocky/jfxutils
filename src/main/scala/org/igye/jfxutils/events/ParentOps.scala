@@ -4,8 +4,8 @@ import javafx.beans.value.ObservableValue
 import javafx.scene.Parent
 
 import org.apache.logging.log4j.Logger
+import org.igye.jfxutils.Implicits.observableValueToObservableValueOperators
 import org.igye.jfxutils.concurrency.RunInJfxThreadForcibly
-import org.igye.jfxutils.observableValueToObservableValueOperators
 import org.igye.jfxutils.properties.ChgListener
 
 class ParentOps(parent: Parent) {

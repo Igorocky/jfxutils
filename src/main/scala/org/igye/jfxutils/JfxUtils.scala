@@ -9,6 +9,7 @@ import javafx.scene.paint.Color
 import javafx.scene.shape.{StrokeLineCap, StrokeLineJoin, StrokeType}
 
 import org.apache.logging.log4j.Logger
+import org.igye.jfxutils.Implicits.{observableValueToObservableValueOperators, nodeToNodeOps}
 import org.igye.jfxutils.action.ActionType.{FILTER, HANDLER}
 import org.igye.jfxutils.action.{Action, ShortcutActionTrigger}
 import org.igye.jfxutils.dialog.{TextFieldVarNameAutocomplete, FileChooserType, TextFieldFileChooser}

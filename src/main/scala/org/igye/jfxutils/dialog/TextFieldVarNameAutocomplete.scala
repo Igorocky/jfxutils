@@ -5,8 +5,8 @@ import javafx.scene.input.KeyEvent
 
 import org.apache.logging.log4j.Logger
 import org.igye.commonutils.GeneralCaseInsensitiveStringFilter
+import org.igye.jfxutils.Implicits.nodeToNodeOps
 import org.igye.jfxutils.autocomplete._
-import org.igye.jfxutils.nodeToNodeOps
 
 object TextFieldVarNameAutocomplete {
     def apply(textField: TextField, width: Double, maxHeight: Double, varNameProvider: => List[String])

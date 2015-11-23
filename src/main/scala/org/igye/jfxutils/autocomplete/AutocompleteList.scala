@@ -9,10 +9,11 @@ import javafx.scene.text.Text
 
 import com.sun.javafx.tk.Toolkit
 import org.apache.logging.log4j.Logger
+import org.igye.jfxutils.Implicits.{nodeToNodeOps, observableValueToObservableValueOperators, propertyToPropertyOperators}
+import org.igye.jfxutils.JfxUtils
 import org.igye.jfxutils.concurrency.{RunInJfxThread, RunInJfxThreadForcibly}
 import org.igye.jfxutils.exceptions.JfxUtilsException
 import org.igye.jfxutils.properties.{ChgListener, Expr}
-import org.igye.jfxutils.{JfxUtils, nodeToNodeOps, observableValueToObservableValueOperators, propertyToPropertyOperators}
 
 import scala.concurrent.Future
 
