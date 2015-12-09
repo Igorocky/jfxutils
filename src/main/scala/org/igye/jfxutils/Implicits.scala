@@ -2,13 +2,14 @@ package org.igye.jfxutils
 
 import javafx.beans.property.Property
 import javafx.beans.value.ObservableValue
-import javafx.scene.{Node, Parent}
+import javafx.scene.{Node, Parent, Scene}
 
-import org.igye.jfxutils.events.{NodeOps, ParentOps}
+import org.igye.jfxutils.events.{NodeOps, ParentOps, SceneOps}
 import org.igye.jfxutils.properties.{ListOperators, ObservableValueOperators, PropertyOperators}
 
 object Implicits {
     implicit def nodeToNodeOps(node: Node) = new NodeOps(node)
+    implicit def sceneToSceneOps(scene: Scene) = new SceneOps(scene)
 
     implicit def parentToParentOps(parent: Parent) = new ParentOps(parent)
 
