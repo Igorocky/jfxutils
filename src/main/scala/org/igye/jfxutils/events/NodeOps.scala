@@ -78,8 +78,8 @@ class NodeOps(node: Node) {
     def bind(actionsList: List[Action]): List[EventHandlerInfo[KeyEvent]] = {
         val filtersShortcutActionTrigger = new ShortcutActionTrigger(actionsList.filter(_.actionType == FILTER))
         val handlersShortcutActionTrigger = new ShortcutActionTrigger(actionsList.filter(_.actionType == HANDLER))
-        node.flt(KeyEvent.ANY) { e => filtersShortcutActionTrigger.triggerActionIfNecessary(e) } ::
-            node.hnd(KeyEvent.ANY) { e => handlersShortcutActionTrigger.triggerActionIfNecessary(e) } ::
+        node.flt(KeyEvent.ANY) { e => filtersShortcutActionTrigger.triggerAction(e) } ::
+            node.hnd(KeyEvent.ANY) { e => handlersShortcutActionTrigger.triggerAction(e) } ::
             Nil
     }
 

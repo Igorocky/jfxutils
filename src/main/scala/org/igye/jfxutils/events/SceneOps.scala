@@ -76,8 +76,8 @@ class SceneOps(scene: Scene) {
     def bind(actionsList: List[Action]): List[EventHandlerInfo[KeyEvent]] = {
         val filtersShortcutActionTrigger = new ShortcutActionTrigger(actionsList.filter(_.actionType == FILTER))
         val handlersShortcutActionTrigger = new ShortcutActionTrigger(actionsList.filter(_.actionType == HANDLER))
-        scene.flt(KeyEvent.ANY) { e => filtersShortcutActionTrigger.triggerActionIfNecessary(e) } ::
-            scene.hnd(KeyEvent.ANY) { e => handlersShortcutActionTrigger.triggerActionIfNecessary(e) } ::
+        scene.flt(KeyEvent.ANY) { e => filtersShortcutActionTrigger.triggerAction(e) } ::
+            scene.hnd(KeyEvent.ANY) { e => handlersShortcutActionTrigger.triggerAction(e) } ::
             Nil
     }
 }
