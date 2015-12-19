@@ -1,8 +1,10 @@
 package org.igye.jfxutils.action
 
-import javafx.scene.control.{Button, Tooltip}
+import javafx.scene.control.{Button, TextField, Tooltip}
+import javafx.scene.input.{KeyCode, KeyEvent}
 
 import org.igye.commonutils.Enum
+import org.igye.jfxutils.Implicits.nodeToNodeOps
 import org.igye.jfxutils.events.Hnd
 
 case class ActionType(name: String)
@@ -107,6 +109,32 @@ object Action {
                 button.setTooltip(initialButtonTooltip)
                 button.setDisable(initialButtonState)
                 button.setOnAction(initialButtonOnActionEventHandler)
+            }
+        })
+    }
+
+    def bind(action: Action, textField: TextField): Unit = {
+        action.bind(new ActionStateAware {
+            private val hnd = Hnd(KeyEvent.KEY_PRESSED){e=>
+                if (e.getCode == KeyCode.ENTER) {
+                    action.trigger()
+                }
+            }
+
+            override def shortcutSet(newShortcut: Shortcut): Unit = {}
+
+            override def shortcutRemoved(): Unit = {}
+
+            override def actionWasEnabled(): Unit = {}
+
+            override def actionWasDisabled(): Unit = {}
+
+            override def thisWasBoundToAction(action: Action): Unit = {
+                textField.hnd(hnd)
+            }
+
+            override def thisWasUnboundFromAction(action: Action): Unit = {
+                textField.remHnd(hnd)
             }
         })
     }
