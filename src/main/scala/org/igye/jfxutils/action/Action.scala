@@ -1,11 +1,13 @@
 package org.igye.jfxutils.action
 
+import javafx.beans.property.{SimpleBooleanProperty, BooleanProperty}
 import javafx.scene.control.{Button, TextField, Tooltip}
 import javafx.scene.input.{KeyCode, KeyEvent}
 
 import org.igye.commonutils.Enum
-import org.igye.jfxutils.Implicits.nodeToNodeOps
+import org.igye.jfxutils.Implicits.{observableValueToObservableValueOperators, nodeToNodeOps}
 import org.igye.jfxutils.events.Hnd
+import org.igye.jfxutils.properties.ChgListener
 
 case class ActionType(name: String)
 object ActionType extends Enum[ActionType] {
@@ -21,7 +23,15 @@ trait Action {
 
     var actionType = ActionType.FILTER
     private var shortcut: Option[Shortcut] = None
-    private var enabled: Boolean = true
+    val enabled: SimpleBooleanProperty = new SimpleBooleanProperty(true)
+
+    enabled ==> ChgListener{chg =>
+        if (chg.newValue) {
+            boundObjects.foreach(_.actionWasEnabled())
+        } else {
+            boundObjects.foreach(_.actionWasDisabled())
+        }
+    }
 
     def setShortcut(shortcut: Shortcut) = {
         this.shortcut = Some(shortcut)
@@ -35,25 +45,7 @@ trait Action {
 
     def getShortcut = shortcut
 
-    def enable(): Unit = {
-        enabled = true
-        boundObjects.foreach(_.actionWasEnabled())
-    }
-
-    def disable(): Unit = {
-        enabled = false
-        boundObjects.foreach(_.actionWasDisabled())
-    }
-
-    def isEnabled = enabled
-
-    def setEnabled(enabled: Boolean): Unit = {
-        if (enabled) {
-            enable()
-        } else {
-            disable()
-        }
-    }
+    def isEnabled = enabled.get()
 
     def trigger(): Unit = {
         if (isEnabled) {
