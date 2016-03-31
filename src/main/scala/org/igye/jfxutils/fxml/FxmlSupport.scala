@@ -32,12 +32,7 @@ object FxmlSupport {
     }
 
     def load[T <: Initable: ClassTag]: T = {
-        load(
-            implicitly[ClassTag[T]].runtimeClass
-                .getAnnotations.find(_.isInstanceOf[FxmlFile])
-                .get.asInstanceOf[FxmlFile].value(),
-            null
-        )
+        load[T](null.asInstanceOf[Stage])
     }
 }
 
